@@ -19,7 +19,7 @@ const LanguageSelector: React.FC = () => {
             key={lang.code}
             variant={currentLanguage === lang.code ? "default" : "outline"}
             size="sm"
-            onClick={() => changeLanguage(lang.code)}
+            onClick={() => changeLanguage(lang.code as 'en' | 'hi')}
             className="text-sm py-1 px-3"
           >
             {lang.name}
