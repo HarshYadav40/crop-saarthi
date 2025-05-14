@@ -1,10 +1,14 @@
 
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { CloudSun, Thermometer, MapPin } from 'lucide-react';
+import { CloudSun, Thermometer, MapPin, Search } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { translations } from '@/lib/translations';
 import { useToast } from "@/hooks/use-toast";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Form, FormField, FormItem, FormControl } from "@/components/ui/form";
+import { useForm } from "react-hook-form";
 
 interface WeatherData {
   temp: number;
@@ -12,6 +16,10 @@ interface WeatherData {
   description: string;
   icon: string;
   location: string;
+}
+
+interface LocationFormValues {
+  locationQuery: string;
 }
 
 const WeatherWidget: React.FC = () => {
@@ -29,6 +37,13 @@ const WeatherWidget: React.FC = () => {
   
   const [isLoading, setIsLoading] = useState(true);
   const [coordinates, setCoordinates] = useState<{lat: number, lon: number} | null>(null);
+  const [showLocationInput, setShowLocationInput] = useState(false);
+
+  const form = useForm<LocationFormValues>({
+    defaultValues: {
+      locationQuery: ''
+    }
+  });
 
   // Get user location
   useEffect(() => {
@@ -69,6 +84,51 @@ const WeatherWidget: React.FC = () => {
 
     getLocation();
   }, [toast, t.locationDetected, t.locationError]);
+
+  // Search location by name
+  const searchLocation = async (locationQuery: string) => {
+    if (!locationQuery.trim()) return;
+    
+    setIsLoading(true);
+    
+    try {
+      const apiKey = "4c05ae6d4060ded9b0a5c998dc1dd2fd";
+      const url = `https://api.openweathermap.org/geo/1.0/direct?q=${encodeURIComponent(locationQuery)}&limit=1&appid=${apiKey}`;
+      
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error('Location search failed');
+      }
+      
+      const data = await response.json();
+      
+      if (data && data.length > 0) {
+        const location = data[0];
+        setCoordinates({
+          lat: location.lat,
+          lon: location.lon
+        });
+        
+        toast({
+          title: "Location Changed",
+          description: `Changed to ${location.name}, ${location.country}`,
+        });
+        
+        // Hide location input after successful search
+        setShowLocationInput(false);
+        form.reset();
+      } else {
+        throw new Error('Location not found');
+      }
+    } catch (error) {
+      console.error("Error searching location:", error);
+      toast({
+        title: "Location Error",
+        description: "Failed to find location. Please try again.",
+        variant: "destructive"
+      });
+    }
+  };
 
   // Fetch weather data when coordinates are available
   useEffect(() => {
@@ -120,16 +180,63 @@ const WeatherWidget: React.FC = () => {
     
     fetchWeatherData();
   }, [coordinates, toast]);
+
+  const onSubmit = (data: LocationFormValues) => {
+    searchLocation(data.locationQuery);
+  };
   
   return (
     <Card className="bg-crop-sky-light">
       <CardHeader className="pb-2">
-        <CardTitle className="flex items-center gap-2">
-          <CloudSun className="h-6 w-6 text-crop-sky-dark" />
-          {t.weatherToday}
+        <CardTitle className="flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2">
+            <CloudSun className="h-6 w-6 text-crop-sky-dark" />
+            {t.weatherToday}
+          </div>
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            className="text-xs p-0 h-8 w-8"
+            onClick={() => setShowLocationInput(!showLocationInput)}
+          >
+            <Search className="h-4 w-4" />
+          </Button>
         </CardTitle>
       </CardHeader>
       <CardContent>
+        {showLocationInput && (
+          <div className="mb-3">
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(onSubmit)} className="flex items-center gap-2">
+                <FormField
+                  control={form.control}
+                  name="locationQuery"
+                  render={({ field }) => (
+                    <FormItem className="flex-1">
+                      <FormControl>
+                        <Input 
+                          placeholder="Enter city name"
+                          autoFocus
+                          className="h-8 text-sm" 
+                          {...field} 
+                        />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+                <Button 
+                  type="submit" 
+                  size="sm" 
+                  variant="default" 
+                  className="h-8 text-xs"
+                >
+                  Search
+                </Button>
+              </form>
+            </Form>
+          </div>
+        )}
+
         {isLoading ? (
           <div className="flex justify-center py-6">
             <div className="animate-spin h-8 w-8 border-4 border-crop-sky rounded-full border-t-transparent"></div>
