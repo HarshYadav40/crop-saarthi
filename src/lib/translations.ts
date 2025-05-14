@@ -29,7 +29,9 @@ export const translations = {
     changeLanguage: 'Change Language',
     loading: 'Loading...',
     noInternet: 'No Internet Connection',
-    offline: 'App is in offline mode'
+    offline: 'App is in offline mode',
+    locationDetected: 'Location detected',
+    locationError: 'Location access denied'
   },
   hi: {
     appName: 'क्रॉप साथी',
@@ -60,6 +62,8 @@ export const translations = {
     changeLanguage: 'भाषा बदलें',
     loading: 'लोड हो रहा है...',
     noInternet: 'इंटरनेट कनेक्शन नहीं है',
-    offline: 'ऐप ऑफलाइन मोड में है'
+    offline: 'ऐप ऑफलाइन मोड में है',
+    locationDetected: 'स्थान का पता चला',
+    locationError: 'स्थान का पता नहीं चल सका'
   }
 };

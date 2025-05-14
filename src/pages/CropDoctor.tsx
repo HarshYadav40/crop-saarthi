@@ -1,13 +1,13 @@
-
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Camera, Image, ArrowLeft } from 'lucide-react';
+import { Camera, Image, ArrowLeft, MapPin } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/components/ui/use-toast";
 import { useLanguage } from '@/contexts/LanguageContext';
 import VoiceInput from '@/components/VoiceInput';
 import offlineStorage from '@/services/OfflineStorage';
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 
 // Mock disease detection results
 const mockDiseaseResults = {
@@ -35,40 +35,154 @@ const CropDoctor: React.FC = () => {
   const { t } = useLanguage();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const fileInputRef = useRef<HTMLInputElement>(null);
   
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [diagnosisResult, setDiagnosisResult] = useState<any>(null);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [isCameraDialogOpen, setIsCameraDialogOpen] = useState(false);
+  const [location, setLocation] = useState<{lat: number, lng: number} | null>(null);
+  const [locationStatus, setLocationStatus] = useState("");
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const streamRef = useRef<MediaStream | null>(null);
+
+  // Get location on component mount
+  useEffect(() => {
+    getLocation();
+    
+    // Cleanup function to stop any active streams when component unmounts
+    return () => {
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach(track => track.stop());
+      }
+    };
+  }, []);
+
+  const getLocation = () => {
+    setLocationStatus("Detecting location...");
+    
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const { latitude, longitude } = position.coords;
+          setLocation({ lat: latitude, lng: longitude });
+          setLocationStatus(`Location: ${latitude.toFixed(4)}, ${longitude.toFixed(4)}`);
+          
+          toast({
+            title: "Location detected",
+            description: `Lat: ${latitude.toFixed(4)}, Long: ${longitude.toFixed(4)}`,
+          });
+        },
+        (error) => {
+          console.error("Error getting location:", error);
+          setLocationStatus("Could not detect location");
+          
+          toast({
+            title: "Location Error",
+            description: "Could not access your location. Please enable location services.",
+            variant: "destructive"
+          });
+        }
+      );
+    } else {
+      setLocationStatus("Geolocation not supported");
+      toast({
+        title: "Location Error",
+        description: "Geolocation is not supported by your browser.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const startCameraStream = async () => {
+    try {
+      if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
+        
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream;
+          streamRef.current = stream;
+        }
+        
+        setIsCameraDialogOpen(true);
+      } else {
+        toast({
+          title: "Camera Error",
+          description: "Camera access is not available on this device.",
+          variant: "destructive"
+        });
+      }
+    } catch (err) {
+      console.error("Error accessing camera:", err);
+      toast({
+        title: "Camera Error",
+        description: "Could not access your camera. Please grant permission.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const stopCameraStream = () => {
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach(track => track.stop());
+      streamRef.current = null;
+    }
+    
+    if (videoRef.current) {
+      videoRef.current.srcObject = null;
+    }
+    
+    setIsCameraDialogOpen(false);
+  };
+
+  const capturePhoto = () => {
+    if (videoRef.current) {
+      const canvas = document.createElement('canvas');
+      canvas.width = videoRef.current.videoWidth;
+      canvas.height = videoRef.current.videoHeight;
+      const ctx = canvas.getContext('2d');
+      
+      if (ctx) {
+        ctx.drawImage(videoRef.current, 0, 0, canvas.width, canvas.height);
+        const imageDataUrl = canvas.toDataURL('image/jpeg');
+        setSelectedImage(imageDataUrl);
+        stopCameraStream();
+        simulateImageProcessing();
+      }
+    }
+  };
 
   const handleCapture = () => {
-    // In a real implementation, we would access the camera
-    toast({
-      title: "Camera Access",
-      description: "This functionality will use the device camera in the full implementation.",
-    });
-    
-    // For demo purposes, we'll use a fake image and detection
-    simulateImageCapture();
+    startCameraStream();
   };
   
   const handleImageSelect = () => {
-    // In a real implementation, we would access the gallery
-    toast({
-      title: "Image Gallery",
-      description: "This functionality will access your photo gallery in the full implementation.",
-    });
-    
-    // For demo purposes, we'll use a fake image and detection
-    simulateImageCapture();
+    if (fileInputRef.current) {
+      fileInputRef.current.click();
+    }
   };
   
-  const simulateImageCapture = () => {
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    
+    if (file) {
+      const reader = new FileReader();
+      
+      reader.onload = (event) => {
+        if (event.target?.result) {
+          setSelectedImage(event.target.result as string);
+          simulateImageProcessing();
+        }
+      };
+      
+      reader.readAsDataURL(file);
+    }
+  };
+  
+  const simulateImageProcessing = () => {
     // Choose a random crop for the demo
     const crops = ['tomato', 'wheat', 'rice'];
     const selectedCrop = crops[Math.floor(Math.random() * crops.length)];
-    
-    // Set a placeholder image
-    setSelectedImage(`/placeholder.svg`);
     
     // Simulate processing time
     setIsAnalyzing(true);
@@ -80,12 +194,13 @@ const CropDoctor: React.FC = () => {
       
       // Save the diagnosis to IndexedDB for offline access
       offlineStorage.saveDiagnosis({
-        imageUrl: `/placeholder.svg`,
+        imageUrl: selectedImage || `/placeholder.svg`,
         disease: result.disease,
         confidence: result.confidence,
         treatment: result.treatment,
         timestamp: Date.now(),
-        synced: false
+        synced: false,
+        location: location ? `${location.lat.toFixed(4)}, ${location.lng.toFixed(4)}` : 'Unknown'
       });
     }, 3000);
   };
@@ -104,6 +219,8 @@ const CropDoctor: React.FC = () => {
       handleImageSelect();
     } else if (lowerTranscript.includes('back') || lowerTranscript.includes('home')) {
       navigate('/');
+    } else if (lowerTranscript.includes('location')) {
+      getLocation();
     }
   };
   
@@ -120,6 +237,13 @@ const CropDoctor: React.FC = () => {
       <header className="mb-8 text-center">
         <h1 className="text-3xl font-bold text-crop-green-dark">{t.cropDoctor}</h1>
         <p className="text-lg text-gray-600 mt-2">{t.uploadPlant}</p>
+        
+        {locationStatus && (
+          <div className="mt-2 flex items-center justify-center text-sm text-gray-500">
+            <MapPin className="h-4 w-4 mr-1" />
+            <span>{locationStatus}</span>
+          </div>
+        )}
       </header>
       
       {!selectedImage ? (
@@ -141,6 +265,13 @@ const CropDoctor: React.FC = () => {
             <CardContent className="flex flex-col items-center justify-center py-12">
               <Image className="h-16 w-16 text-crop-earth-dark mb-4" />
               <h3 className="text-xl font-semibold">{t.selectFromGallery}</h3>
+              <input 
+                type="file" 
+                ref={fileInputRef}
+                onChange={handleFileChange}
+                accept="image/*"
+                className="hidden"
+              />
             </CardContent>
           </Card>
         </div>
@@ -199,6 +330,30 @@ const CropDoctor: React.FC = () => {
           )}
         </div>
       )}
+      
+      {/* Camera Dialog */}
+      <Dialog open={isCameraDialogOpen} onOpenChange={setIsCameraDialogOpen}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogTitle>Take a Photo</DialogTitle>
+          <DialogDescription>
+            Position the plant in the center of the frame
+          </DialogDescription>
+          
+          <div className="relative aspect-video w-full bg-black rounded-md overflow-hidden">
+            <video 
+              ref={videoRef}
+              autoPlay
+              playsInline
+              className="w-full h-full object-cover"
+            />
+          </div>
+          
+          <div className="flex justify-between">
+            <Button variant="outline" onClick={stopCameraStream}>Cancel</Button>
+            <Button onClick={capturePhoto}>Capture</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
       
       <VoiceInput onTranscript={handleVoiceInput} />
     </div>

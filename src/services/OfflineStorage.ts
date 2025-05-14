@@ -1,7 +1,9 @@
 
-import { openDB, IDBPDatabase } from 'idb';
+// Create a wrapper around IndexedDB for offline storage of data
+import { openDB, DBSchema } from 'idb';
 
-interface PlantDiagnosis {
+// Define interfaces for our data types
+interface Diagnosis {
   id?: number;
   imageUrl: string;
   disease: string;
@@ -9,103 +11,85 @@ interface PlantDiagnosis {
   treatment: string;
   timestamp: number;
   synced: boolean;
+  location?: string;
 }
 
-interface WeatherData {
-  timestamp: number;
-  data: any;
-  location: string;
+// Define the database schema
+interface CropSaarthiDB extends DBSchema {
+  diagnoses: {
+    key: number;
+    value: Diagnosis;
+    indexes: { 'by-timestamp': number };
+  };
 }
 
-class OfflineStorage {
-  private dbPromise: Promise<IDBPDatabase>;
-
-  constructor() {
-    this.dbPromise = openDB('cropSaarthiDB', 1, {
-      upgrade(db) {
-        // Create object stores
-        if (!db.objectStoreNames.contains('plantDiagnoses')) {
-          const diagnosisStore = db.createObjectStore('plantDiagnoses', { keyPath: 'id', autoIncrement: true });
-          diagnosisStore.createIndex('timestamp', 'timestamp');
-        }
-        
-        if (!db.objectStoreNames.contains('weatherData')) {
-          const weatherStore = db.createObjectStore('weatherData', { keyPath: 'timestamp' });
-          weatherStore.createIndex('location', 'location');
-        }
-      }
+// Create a single instance of the database
+const dbPromise = openDB<CropSaarthiDB>('crop-saarthi-db', 1, {
+  upgrade(db) {
+    // Create a store for crop diagnoses
+    const diagnosisStore = db.createObjectStore('diagnoses', {
+      keyPath: 'id',
+      autoIncrement: true,
     });
-  }
+    
+    // Create an index for timestamp-based queries
+    diagnosisStore.createIndex('by-timestamp', 'timestamp');
+  },
+});
 
-  // Plant diagnosis methods
-  async saveDiagnosis(diagnosis: PlantDiagnosis): Promise<number> {
-    const db = await this.dbPromise;
-    diagnosis.timestamp = Date.now();
-    diagnosis.synced = navigator.onLine;
-    return db.add('plantDiagnoses', diagnosis);
-  }
-
-  async getDiagnoses(): Promise<PlantDiagnosis[]> {
-    const db = await this.dbPromise;
-    return db.getAllFromIndex('plantDiagnoses', 'timestamp');
-  }
-
-  async getUnsyncedDiagnoses(): Promise<PlantDiagnosis[]> {
-    const db = await this.dbPromise;
-    const all = await db.getAll('plantDiagnoses');
-    return all.filter(diagnosis => !diagnosis.synced);
-  }
-
-  async markAsSynced(id: number): Promise<void> {
-    const db = await this.dbPromise;
-    const diagnosis = await db.get('plantDiagnoses', id);
+// Export a singleton object with methods to interact with IndexedDB
+const offlineStorage = {
+  // Save a new diagnosis to IndexedDB
+  async saveDiagnosis(diagnosis: Omit<Diagnosis, 'id'>): Promise<number> {
+    const db = await dbPromise;
+    const tx = db.transaction('diagnoses', 'readwrite');
+    const store = tx.objectStore('diagnoses');
+    
+    const id = await store.add(diagnosis);
+    await tx.done;
+    
+    return id as number;
+  },
+  
+  // Get all stored diagnoses
+  async getAllDiagnoses(): Promise<Diagnosis[]> {
+    const db = await dbPromise;
+    return db.getAllFromIndex('diagnoses', 'by-timestamp');
+  },
+  
+  // Get a diagnosis by its ID
+  async getDiagnosis(id: number): Promise<Diagnosis | undefined> {
+    const db = await dbPromise;
+    return db.get('diagnoses', id);
+  },
+  
+  // Delete a diagnosis by its ID
+  async deleteDiagnosis(id: number): Promise<void> {
+    const db = await dbPromise;
+    await db.delete('diagnoses', id);
+  },
+  
+  // Update a diagnosis's sync status
+  async updateSyncStatus(id: number, synced: boolean): Promise<void> {
+    const db = await dbPromise;
+    const tx = db.transaction('diagnoses', 'readwrite');
+    const store = tx.objectStore('diagnoses');
+    
+    const diagnosis = await store.get(id);
     if (diagnosis) {
-      diagnosis.synced = true;
-      await db.put('plantDiagnoses', diagnosis);
-    }
-  }
-
-  // Weather data methods
-  async saveWeatherData(weatherData: WeatherData): Promise<number> {
-    const db = await this.dbPromise;
-    return db.put('weatherData', weatherData);
-  }
-
-  async getLatestWeatherData(location: string): Promise<WeatherData | undefined> {
-    const db = await this.dbPromise;
-    const data = await db.getAllFromIndex('weatherData', 'location', location);
-    return data.sort((a, b) => b.timestamp - a.timestamp)[0];
-  }
-
-  async clearOldData(): Promise<void> {
-    // Remove data older than 7 days
-    const oneWeekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
-    const db = await this.dbPromise;
-    
-    const diagnosisTxn = db.transaction('plantDiagnoses', 'readwrite');
-    const diagnosisStore = diagnosisTxn.objectStore('plantDiagnoses');
-    const diagnosisKeys = await diagnosisStore.getAllKeys();
-    
-    for (const key of diagnosisKeys) {
-      const diagnosis = await diagnosisStore.get(key);
-      if (diagnosis && diagnosis.timestamp < oneWeekAgo) {
-        await diagnosisStore.delete(key);
-      }
+      diagnosis.synced = synced;
+      await store.put(diagnosis);
     }
     
-    const weatherTxn = db.transaction('weatherData', 'readwrite');
-    const weatherStore = weatherTxn.objectStore('weatherData');
-    const weatherKeys = await weatherStore.getAllKeys();
-    
-    for (const key of weatherKeys) {
-      const data = await weatherStore.get(key);
-      if (data && data.timestamp < oneWeekAgo) {
-        await weatherStore.delete(key);
-      }
-    }
-  }
-}
+    await tx.done;
+  },
+  
+  // Get all unsynced diagnoses
+  async getUnsyncedDiagnoses(): Promise<Diagnosis[]> {
+    const db = await dbPromise;
+    const diagnoses = await db.getAllFromIndex('diagnoses', 'by-timestamp');
+    return diagnoses.filter(diagnosis => !diagnosis.synced);
+  },
+};
 
-// Create a singleton instance
-const offlineStorage = new OfflineStorage();
 export default offlineStorage;
