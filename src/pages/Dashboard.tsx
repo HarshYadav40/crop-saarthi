@@ -1,8 +1,7 @@
-
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Grid, Leaf, CloudRain, Sun, FileText, Info } from 'lucide-react';
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import FeatureCard from '@/components/FeatureCard';
 import WeatherWidget from '@/components/WeatherWidget';
 import VoiceInput from '@/components/VoiceInput';
@@ -91,7 +90,7 @@ const Dashboard: React.FC = () => {
       </section>
 
       <section className="mb-8">
-        <h2 className="text-2xl font-semibold mb-6">{t.appName} {t.features}</h2>
+        <h2 className="text-2xl font-semibold mb-6">{t.appName} {t.features || "Features"}</h2>
         <div className="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-6">
           <FeatureCard
             title={t.cropDoctor}

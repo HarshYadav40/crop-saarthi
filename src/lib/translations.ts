@@ -3,6 +3,7 @@ export const translations = {
   en: {
     appName: 'CropSaarthi',
     tagline: 'Your AI-Powered Farming Assistant',
+    features: 'Features',
     cropDoctor: 'Crop Doctor',
     cropDoctorDesc: 'Detect diseases from photos and get treatment advice',
     irrigation: 'Irrigation Planner',
@@ -36,6 +37,7 @@ export const translations = {
   hi: {
     appName: 'क्रॉप साथी',
     tagline: 'आपका AI-समर्थित कृषि सहायक',
+    features: 'सुविधाएँ',
     cropDoctor: 'फसल डॉक्टर',
     cropDoctorDesc: 'फोटो से रोग पहचानें और उपचार पाएं',
     irrigation: 'सिंचाई योजना',
