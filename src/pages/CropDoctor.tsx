@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Camera, Image, ArrowLeft, MapPin } from 'lucide-react';
@@ -7,29 +8,8 @@ import { useToast } from "@/components/ui/use-toast";
 import { useLanguage } from '@/contexts/LanguageContext';
 import VoiceInput from '@/components/VoiceInput';
 import offlineStorage from '@/services/OfflineStorage';
+import { identifyPlantDisease } from '@/services/PlantApi';
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from '@/components/ui/dialog';
-
-// Mock disease detection results
-const mockDiseaseResults = {
-  'tomato': {
-    disease: 'Tomato Early Blight',
-    confidence: 94.8,
-    treatment: 'Remove infected leaves. Apply neem oil or copper-based fungicide. Ensure proper spacing between plants for air circulation.',
-    organicSolution: 'Mix 2 tablespoons of baking soda, 1 tablespoon of vegetable oil, and a few drops of mild soap in 1 gallon of water. Spray on infected plants weekly.'
-  },
-  'wheat': {
-    disease: 'Wheat Leaf Rust',
-    confidence: 88.7,
-    treatment: 'Apply fungicide with active ingredients like tebuconazole or propiconazole. Remove volunteer wheat plants that may harbor the disease.',
-    organicSolution: 'Spray a mixture of 1 part milk to 10 parts water twice a week. Plant rust-resistant wheat varieties in the future.'
-  },
-  'rice': {
-    disease: 'Rice Blast',
-    confidence: 91.2,
-    treatment: 'Apply fungicides containing tricyclazole or azoxystrobin. Avoid excess nitrogen fertilization.',
-    organicSolution: 'Apply compost tea as a foliar spray. Maintain balanced field water levels and avoid water stress.'
-  }
-};
 
 const CropDoctor: React.FC = () => {
   const { t } = useLanguage();
@@ -147,7 +127,7 @@ const CropDoctor: React.FC = () => {
         const imageDataUrl = canvas.toDataURL('image/jpeg');
         setSelectedImage(imageDataUrl);
         stopCameraStream();
-        simulateImageProcessing();
+        processSelectedImage(imageDataUrl);
       }
     }
   };
@@ -170,8 +150,9 @@ const CropDoctor: React.FC = () => {
       
       reader.onload = (event) => {
         if (event.target?.result) {
-          setSelectedImage(event.target.result as string);
-          simulateImageProcessing();
+          const imageDataUrl = event.target.result as string;
+          setSelectedImage(imageDataUrl);
+          processSelectedImage(imageDataUrl);
         }
       };
       
@@ -179,22 +160,20 @@ const CropDoctor: React.FC = () => {
     }
   };
   
-  const simulateImageProcessing = () => {
-    // Choose a random crop for the demo
-    const crops = ['tomato', 'wheat', 'rice'];
-    const selectedCrop = crops[Math.floor(Math.random() * crops.length)];
-    
-    // Simulate processing time
+  const processSelectedImage = async (imageDataUrl: string) => {
+    // Start analyzing
     setIsAnalyzing(true);
     
-    setTimeout(() => {
-      const result = mockDiseaseResults[selectedCrop as keyof typeof mockDiseaseResults];
+    try {
+      // Call the plant disease identification API
+      const result = await identifyPlantDisease(imageDataUrl);
+      
+      // Set the diagnosis result
       setDiagnosisResult(result);
-      setIsAnalyzing(false);
       
       // Save the diagnosis to IndexedDB for offline access
       offlineStorage.saveDiagnosis({
-        imageUrl: selectedImage || `/placeholder.svg`,
+        imageUrl: imageDataUrl,
         disease: result.disease,
         confidence: result.confidence,
         treatment: result.treatment,
@@ -202,7 +181,21 @@ const CropDoctor: React.FC = () => {
         synced: false,
         location: location ? `${location.lat.toFixed(4)}, ${location.lng.toFixed(4)}` : 'Unknown'
       });
-    }, 3000);
+      
+      toast({
+        title: "Analysis Complete",
+        description: `Identified ${result.disease} with ${result.confidence.toFixed(1)}% confidence`,
+      });
+    } catch (error) {
+      console.error("Error processing image:", error);
+      toast({
+        title: "Analysis Failed",
+        description: "Could not analyze the plant image. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsAnalyzing(false);
+    }
   };
   
   const handleVoiceInput = (transcript: string) => {
