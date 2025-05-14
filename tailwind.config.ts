@@ -1,3 +1,4 @@
+
 import type { Config } from "tailwindcss";
 
 export default {
@@ -61,7 +62,33 @@ export default {
 					'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
-				}
+				},
+				// CropSaarthi custom colors
+				'crop-green': {
+					light: '#8BC34A',
+					DEFAULT: '#4CAF50',
+					dark: '#2E7D32',
+				},
+				'crop-earth': {
+					light: '#D7CCC8',
+					DEFAULT: '#A1887F',
+					dark: '#5D4037',
+				},
+				'crop-sky': {
+					light: '#BBDEFB',
+					DEFAULT: '#2196F3',
+					dark: '#1565C0',
+				},
+				'crop-sun': {
+					light: '#FFECB3',
+					DEFAULT: '#FF9800',
+					dark: '#E65100',
+				},
+				'crop-water': {
+					light: '#B3E5FC',
+					DEFAULT: '#03A9F4',
+					dark: '#0277BD',
+				},
 			},
 			borderRadius: {
 				lg: 'var(--radius)',
@@ -84,11 +111,26 @@ export default {
 					to: {
 						height: '0'
 					}
-				}
+				},
+				'pulse-gentle': {
+					'0%, 100%': { opacity: '1' },
+					'50%': { opacity: '0.7' },
+				},
+				'grow-shrink': {
+					'0%, 100%': { transform: 'scale(1)' },
+					'50%': { transform: 'scale(1.05)' },
+				},
+				'float': {
+					'0%, 100%': { transform: 'translateY(0)' },
+					'50%': { transform: 'translateY(-5px)' },
+				},
 			},
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
-				'accordion-up': 'accordion-up 0.2s ease-out'
+				'accordion-up': 'accordion-up 0.2s ease-out',
+				'pulse-gentle': 'pulse-gentle 2s infinite ease-in-out',
+				'grow-shrink': 'grow-shrink 3s infinite ease-in-out',
+				'float': 'float 3s infinite ease-in-out',
 			}
 		}
 	},
