@@ -66,10 +66,7 @@ const Dashboard: React.FC = () => {
       navigate('/crop-doctor');
     } else if (lowerTranscript.includes('water') || lowerTranscript.includes('irrigation') || 
                lowerTranscript.includes('rain') || lowerTranscript.includes('सिंचाई')) {
-      toast({
-        title: "Irrigation Module",
-        description: "This feature will be available soon.",
-      });
+      navigate('/irrigation-planner'); // Updated to navigate to new module
     }
   };
 
@@ -123,12 +120,7 @@ const Dashboard: React.FC = () => {
             description={t.irrigationDesc}
             icon={<CloudRain className="w-10 h-10" />}
             bgColor="bg-crop-water"
-            onClick={() => {
-              toast({
-                title: "Coming Soon",
-                description: "The Irrigation Planner will be available in the next update.",
-              });
-            }}
+            onClick={() => navigate('/irrigation-planner')} // Updated to navigate to new module
           />
           
           <FeatureCard

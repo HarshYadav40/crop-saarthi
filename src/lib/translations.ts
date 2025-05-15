@@ -32,7 +32,19 @@ export const translations = {
     noInternet: 'No Internet Connection',
     offline: 'App is in offline mode',
     locationDetected: 'Location detected',
-    locationError: 'Location access denied'
+    locationError: 'Location access denied',
+    irrigationPlanner: 'Smart Irrigation Planner',
+    cropSettings: 'Crop Settings',
+    soilCondition: 'Soil Condition',
+    weatherForecast: 'Weather Forecast',
+    recommendation: 'Irrigation Recommendation',
+    setReminder: 'Set Reminder',
+    refreshData: 'Refresh Data',
+    dry: 'Dry',
+    moist: 'Moist',
+    wet: 'Wet',
+    irrigationNeeded: 'Irrigation Needed',
+    noIrrigationRequired: 'No Irrigation Required'
   },
   hi: {
     appName: 'क्रॉप साथी',
@@ -66,6 +78,18 @@ export const translations = {
     noInternet: 'इंटरनेट कनेक्शन नहीं है',
     offline: 'ऐप ऑफलाइन मोड में है',
     locationDetected: 'स्थान का पता चला',
-    locationError: 'स्थान का पता नहीं चल सका'
+    locationError: 'स्थान का पता नहीं चल सका',
+    irrigationPlanner: 'स्मार्ट सिंचाई योजनाकार',
+    cropSettings: 'फसल सेटिंग्स',
+    soilCondition: 'मिट्टी की स्थिति',
+    weatherForecast: 'मौसम पूर्वानुमान',
+    recommendation: 'सिंचाई की सिफारिश',
+    setReminder: 'रिमाइंडर सेट करें',
+    refreshData: 'डेटा रिफ्रेश करें',
+    dry: 'सूखी',
+    moist: 'नम',
+    wet: 'गीली',
+    irrigationNeeded: 'सिंचाई की आवश्यकता है',
+    noIrrigationRequired: 'सिंचाई की आवश्यकता नहीं है'
   }
 };
