@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { CloudSun, Thermometer, MapPin, Search } from 'lucide-react';
+import { CloudSun, Thermometer, MapPin, Search, CloudRain, Droplet } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { translations } from '@/lib/translations';
 import { useToast } from "@/hooks/use-toast";
@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Form, FormField, FormItem, FormControl } from "@/components/ui/form";
 import { useForm } from "react-hook-form";
+import weatherService from '@/services/WeatherService';
 
 interface WeatherData {
   temp: number;
@@ -16,6 +17,7 @@ interface WeatherData {
   description: string;
   icon: string;
   location: string;
+  rainfall?: number;
 }
 
 interface LocationFormValues {
@@ -92,7 +94,7 @@ const WeatherWidget: React.FC = () => {
     setIsLoading(true);
     
     try {
-      const apiKey = "4c05ae6d4060ded9b0a5c998dc1dd2fd";
+      const apiKey = "5a93f404f3bbd3ddd07d3f3ea27009e6"; // Using the updated API key
       const url = `https://api.openweathermap.org/geo/1.0/direct?q=${encodeURIComponent(locationQuery)}&limit=1&appid=${apiKey}`;
       
       const response = await fetch(url);
@@ -138,25 +140,36 @@ const WeatherWidget: React.FC = () => {
       setIsLoading(true);
       
       try {
-        // Using OpenWeatherMap API
-        // Note: In a production app, you should use environment variables for API keys
-        const apiKey = "4c05ae6d4060ded9b0a5c998dc1dd2fd"; // Free tier API key (limited usage)
-        const url = `https://api.openweathermap.org/data/2.5/weather?lat=${coordinates.lat}&lon=${coordinates.lon}&units=metric&appid=${apiKey}`;
+        // First, try to get the forecast data
+        const forecastResponse = await weatherService.getForecast(
+          coordinates.lat,
+          coordinates.lon
+        );
         
-        const response = await fetch(url);
-        if (!response.ok) {
-          throw new Error('Weather data fetch failed');
+        if (forecastResponse.success && forecastResponse.forecasts.length > 0) {
+          // Use the first day forecast for current weather
+          const currentForecast = forecastResponse.forecasts[0];
+          
+          // Get city name through reverse geocoding
+          const apiKey = "5a93f404f3bbd3ddd07d3f3ea27009e6";
+          const geoUrl = `https://api.openweathermap.org/geo/1.0/reverse?lat=${coordinates.lat}&lon=${coordinates.lon}&limit=1&appid=${apiKey}`;
+          const geoResponse = await fetch(geoUrl);
+          const geoData = await geoResponse.json();
+          const locationName = geoData && geoData.length > 0 
+            ? `${geoData[0].name}, ${geoData[0].country}`
+            : `${coordinates.lat.toFixed(2)}, ${coordinates.lon.toFixed(2)}`;
+          
+          setWeatherData({
+            temp: Math.round(currentForecast.temp),
+            humidity: currentForecast.humidity,
+            rainfall: currentForecast.rainfall,
+            description: currentForecast.description,
+            icon: currentForecast.icon,
+            location: locationName
+          });
+        } else {
+          throw new Error(forecastResponse.message || 'Failed to fetch weather data');
         }
-        
-        const data = await response.json();
-        
-        setWeatherData({
-          temp: Math.round(data.main.temp),
-          humidity: data.main.humidity,
-          description: data.weather[0].description,
-          icon: data.weather[0].icon,
-          location: `${data.name}, ${data.sys.country}`
-        });
       } catch (error) {
         console.error("Error fetching weather data:", error);
         toast({
@@ -169,6 +182,7 @@ const WeatherWidget: React.FC = () => {
         setWeatherData({
           temp: 32,
           humidity: 65,
+          rainfall: 0,
           description: 'Partly Cloudy',
           icon: '03d',
           location: 'Pune, Maharashtra'
@@ -183,6 +197,19 @@ const WeatherWidget: React.FC = () => {
 
   const onSubmit = (data: LocationFormValues) => {
     searchLocation(data.locationQuery);
+  };
+  
+  // Determine irrigation advice based on weather data
+  const getIrrigationAdvice = () => {
+    if (weatherData.rainfall && weatherData.rainfall > 5) {
+      return t.skipIrrigation || "Skip irrigation today due to expected rainfall";
+    } else if (weatherData.humidity > 85) {
+      return t.reduceWatering || "Consider reducing watering due to high humidity";
+    } else if (weatherData.humidity < 40) {
+      return t.increaseWatering || "Consider increasing watering due to dry conditions";
+    } else {
+      return t.normalWatering || "Normal watering recommended";
+    }
   };
   
   return (
@@ -252,7 +279,23 @@ const WeatherWidget: React.FC = () => {
               <span className="text-2xl font-bold">{weatherData.temp}°C</span>
             </div>
             <div className="text-gray-600 capitalize">{weatherData.description}</div>
-            <div className="text-gray-600">{t.humidity}: {weatherData.humidity}%</div>
+            
+            <div className="flex justify-between text-gray-600">
+              <div className="flex items-center">
+                <Droplet className="h-4 w-4 mr-1" />
+                {t.humidity || "Humidity"}: {weatherData.humidity}%
+              </div>
+              
+              {weatherData.rainfall !== undefined && (
+                <div className="flex items-center">
+                  <CloudRain className="h-4 w-4 mr-1" />
+                  {weatherData.rainfall > 0 
+                    ? `${weatherData.rainfall.toFixed(1)}mm` 
+                    : t.noRain || "No rain"}
+                </div>
+              )}
+            </div>
+            
             {weatherData.icon && (
               <div className="flex items-center">
                 <img 
@@ -264,7 +307,7 @@ const WeatherWidget: React.FC = () => {
             )}
             <div className="mt-2 text-sm bg-white bg-opacity-60 rounded-md p-2">
               <span className="font-medium">
-                {t.irrigationAdvice}: {weatherData.humidity > 70 ? t.skipIrrigation : t.waterCrops}
+                {t.irrigationAdvice || "Irrigation Advice"}: {getIrrigationAdvice()}
               </span>
             </div>
           </div>

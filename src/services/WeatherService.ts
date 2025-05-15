@@ -1,3 +1,4 @@
+
 import { toast } from "@/hooks/use-toast";
 
 export interface WeatherForecast {
@@ -16,7 +17,8 @@ export interface ForecastResponse {
 }
 
 class WeatherService {
-  private readonly API_KEY = "4c05ae6d4060ded9b0a5c998dc1dd2fd"; 
+  // Using a free API key for OpenWeatherMap
+  private readonly API_KEY = "5a93f404f3bbd3ddd07d3f3ea27009e6"; 
   private readonly API_URL = "https://api.openweathermap.org/data/2.5/forecast";
   private cachedForecasts: Record<string, { data: ForecastResponse; timestamp: number }> = {};
   private readonly CACHE_VALIDITY = 3 * 60 * 60 * 1000; // 3 hours in milliseconds
@@ -34,13 +36,17 @@ class WeatherService {
 
     try {
       const url = `${this.API_URL}?lat=${lat}&lon=${lon}&units=metric&appid=${this.API_KEY}`;
+      console.log("Fetching weather forecast from:", url);
       const response = await fetch(url);
       
       if (!response.ok) {
-        throw new Error(`Weather API error: ${response.status}`);
+        const errorText = await response.text();
+        console.error("Weather API error response:", errorText);
+        throw new Error(`Weather API error: ${response.status} - ${errorText}`);
       }
       
       const data = await response.json();
+      console.log("Received weather forecast data:", data);
       
       // Parse the response to extract the data we need
       const forecasts: WeatherForecast[] = data.list.map((item: any) => ({

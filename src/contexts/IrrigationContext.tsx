@@ -14,6 +14,7 @@ interface IrrigationContextType {
   setWeatherForecasts: (forecasts: WeatherForecast[]) => void;
   refreshData: () => void;
   isLoading: boolean;
+  setIsLoading: (isLoading: boolean) => void;
 }
 
 const IrrigationContext = createContext<IrrigationContextType | undefined>(undefined);
@@ -88,7 +89,8 @@ export const IrrigationProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     weatherForecasts,
     setWeatherForecasts,
     refreshData,
-    isLoading
+    isLoading,
+    setIsLoading
   };
 
   return (
