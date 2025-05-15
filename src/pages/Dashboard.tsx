@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Grid, Leaf, CloudRain, Sun, FileText, Info } from 'lucide-react';
@@ -72,6 +73,23 @@ const Dashboard: React.FC = () => {
     }
   };
 
+  // Function to open external link in new tab
+  const openExternalLink = (url: string, title: string, message: string) => {
+    if (isOnline) {
+      window.open(url, '_blank', 'noopener,noreferrer');
+      toast({
+        title: title,
+        description: message,
+      });
+    } else {
+      toast({
+        title: t.offlineMode,
+        description: t.noInternet,
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
     <div className="container mx-auto px-4 py-8">
       <header className="mb-8 text-center">
@@ -132,10 +150,11 @@ const Dashboard: React.FC = () => {
             icon={<FileText className="w-10 h-10" />}
             bgColor="bg-crop-earth"
             onClick={() => {
-              toast({
-                title: "Coming Soon",
-                description: "The Soil Testing module will be available in the next update.",
-              });
+              openExternalLink(
+                "https://soilhealth.dac.gov.in/", 
+                "Soil Health Card Portal",
+                "Redirecting to Government's Soil Health Card Portal"
+              );
             }}
           />
           
