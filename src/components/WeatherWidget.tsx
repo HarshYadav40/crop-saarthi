@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CloudSun, Thermometer, MapPin, Search, CloudRain, Droplet } from 'lucide-react';
