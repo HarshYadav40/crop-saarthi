@@ -1,7 +1,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Camera, Image, ArrowLeft, MapPin } from 'lucide-react';
+import { Camera, Image, ArrowLeft, MapPin, Leaf, TestTube, Bug } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/components/ui/use-toast";
@@ -165,6 +165,12 @@ const CropDoctor: React.FC = () => {
     setIsAnalyzing(true);
     
     try {
+      // Show analyzing toast
+      toast({
+        title: "AI Analysis Started",
+        description: "Analyzing your plant image for diseases...",
+      });
+      
       // Call the plant disease identification API
       const result = await identifyPlantDisease(imageDataUrl);
       
@@ -184,7 +190,7 @@ const CropDoctor: React.FC = () => {
       
       toast({
         title: "Analysis Complete",
-        description: `Identified ${result.disease} with ${result.confidence.toFixed(1)}% confidence`,
+        description: `Identified ${result.disease} with ${result.confidence}% confidence`,
       });
     } catch (error) {
       console.error("Error processing image:", error);
@@ -291,21 +297,30 @@ const CropDoctor: React.FC = () => {
             <Card className="max-w-md mx-auto bg-white">
               <CardContent className="pt-6">
                 <div className="space-y-4">
-                  <div>
-                    <h3 className="text-xl font-bold text-red-600">{diagnosisResult.disease}</h3>
-                    <p className="text-sm text-gray-500">
-                      Confidence: {diagnosisResult.confidence}%
-                    </p>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="text-xl font-bold text-red-600">{diagnosisResult.disease}</h3>
+                      <p className="text-sm text-gray-500">
+                        AI Confidence: {diagnosisResult.confidence}%
+                      </p>
+                    </div>
+                    <Bug className="h-8 w-8 text-red-500" />
                   </div>
                   
-                  <div>
-                    <h4 className="font-semibold text-crop-green-dark">Treatment:</h4>
-                    <p>{diagnosisResult.treatment}</p>
+                  <div className="bg-gray-50 p-4 rounded-md">
+                    <div className="flex items-center mb-2">
+                      <TestTube className="h-5 w-5 mr-2 text-crop-green-dark" />
+                      <h4 className="font-semibold text-crop-green-dark">Treatment:</h4>
+                    </div>
+                    <p className="text-gray-700">{diagnosisResult.treatment}</p>
                   </div>
                   
-                  <div className="bg-crop-earth-light/30 p-3 rounded-md">
-                    <h4 className="font-semibold text-crop-earth-dark">Organic Solution:</h4>
-                    <p>{diagnosisResult.organicSolution}</p>
+                  <div className="bg-crop-earth-light/30 p-4 rounded-md">
+                    <div className="flex items-center mb-2">
+                      <Leaf className="h-5 w-5 mr-2 text-crop-earth-dark" />
+                      <h4 className="font-semibold text-crop-earth-dark">Organic Solution:</h4>
+                    </div>
+                    <p className="text-gray-700">{diagnosisResult.organicSolution}</p>
                   </div>
                   
                   <Button 
