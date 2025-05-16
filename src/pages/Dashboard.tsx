@@ -66,7 +66,10 @@ const Dashboard: React.FC = () => {
       navigate('/crop-doctor');
     } else if (lowerTranscript.includes('water') || lowerTranscript.includes('irrigation') || 
                lowerTranscript.includes('rain') || lowerTranscript.includes('सिंचाई')) {
-      navigate('/irrigation-planner'); // Updated to navigate to new module
+      navigate('/irrigation-planner');
+    } else if (lowerTranscript.includes('solar') || lowerTranscript.includes('sun') || 
+               lowerTranscript.includes('energy') || lowerTranscript.includes('सौर')) {
+      navigate('/solar-solutions');
     }
   };
 
@@ -120,7 +123,7 @@ const Dashboard: React.FC = () => {
             description={t.irrigationDesc}
             icon={<CloudRain className="w-10 h-10" />}
             bgColor="bg-crop-water"
-            onClick={() => navigate('/irrigation-planner')} // Updated to navigate to new module
+            onClick={() => navigate('/irrigation-planner')}
           />
           
           <FeatureCard
@@ -128,12 +131,7 @@ const Dashboard: React.FC = () => {
             description={t.solarDesc}
             icon={<Sun className="w-10 h-10" />}
             bgColor="bg-crop-sun"
-            onClick={() => {
-              toast({
-                title: "Coming Soon",
-                description: "The Solar Solutions module will be available in the next update.",
-              });
-            }}
+            onClick={() => navigate('/solar-solutions')}
           />
           
           <FeatureCard
