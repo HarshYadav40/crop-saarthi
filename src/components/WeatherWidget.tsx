@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Form, FormField, FormItem, FormControl } from "@/components/ui/form";
 import { useForm } from "react-hook-form";
 import weatherService from '@/services/WeatherService';
+import { ForecastResponse } from '@/services/WeatherService';
 
 interface WeatherData {
   temp: number;
@@ -39,6 +40,7 @@ const WeatherWidget: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [coordinates, setCoordinates] = useState<{lat: number, lon: number} | null>(null);
   const [showLocationInput, setShowLocationInput] = useState(false);
+  const [forecastResponse, setForecastResponse] = useState<ForecastResponse | null>(null);
 
   const form = useForm<LocationFormValues>({
     defaultValues: {
@@ -93,7 +95,7 @@ const WeatherWidget: React.FC = () => {
     setIsLoading(true);
     
     try {
-      const apiKey = "5a93f404f3bbd3ddd07d3f3ea27009e6"; // Using the updated API key
+      const apiKey = "b112c963edd1e0862ac7e8f4bacb3722"; // Updated API key
       const url = `https://api.openweathermap.org/geo/1.0/direct?q=${encodeURIComponent(locationQuery)}&limit=1&appid=${apiKey}`;
       
       const response = await fetch(url);
@@ -125,9 +127,16 @@ const WeatherWidget: React.FC = () => {
       console.error("Error searching location:", error);
       toast({
         title: "Location Error",
-        description: "Failed to find location. Please try again.",
+        description: "Failed to find location. Using default location instead.",
         variant: "destructive"
       });
+      
+      // Fallback to a default location
+      setCoordinates({ lat: 18.52, lon: 73.86 });
+      setShowLocationInput(false);
+      form.reset();
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -139,24 +148,35 @@ const WeatherWidget: React.FC = () => {
       setIsLoading(true);
       
       try {
-        // First, try to get the forecast data
-        const forecastResponse = await weatherService.getForecast(
+        // Get forecast data
+        const response = await weatherService.getForecast(
           coordinates.lat,
           coordinates.lon
         );
         
-        if (forecastResponse.success && forecastResponse.forecasts.length > 0) {
+        setForecastResponse(response);
+        
+        if (response.success && response.forecasts.length > 0) {
           // Use the first day forecast for current weather
-          const currentForecast = forecastResponse.forecasts[0];
+          const currentForecast = response.forecasts[0];
           
-          // Get city name through reverse geocoding
-          const apiKey = "5a93f404f3bbd3ddd07d3f3ea27009e6";
-          const geoUrl = `https://api.openweathermap.org/geo/1.0/reverse?lat=${coordinates.lat}&lon=${coordinates.lon}&limit=1&appid=${apiKey}`;
-          const geoResponse = await fetch(geoUrl);
-          const geoData = await geoResponse.json();
-          const locationName = geoData && geoData.length > 0 
-            ? `${geoData[0].name}, ${geoData[0].country}`
-            : `${coordinates.lat.toFixed(2)}, ${coordinates.lon.toFixed(2)}`;
+          // Try to get city name through reverse geocoding
+          let locationName = `${coordinates.lat.toFixed(2)}, ${coordinates.lon.toFixed(2)}`;
+          try {
+            const apiKey = "b112c963edd1e0862ac7e8f4bacb3722";
+            const geoUrl = `https://api.openweathermap.org/geo/1.0/reverse?lat=${coordinates.lat}&lon=${coordinates.lon}&limit=1&appid=${apiKey}`;
+            const geoResponse = await fetch(geoUrl);
+            
+            if (geoResponse.ok) {
+              const geoData = await geoResponse.json();
+              if (geoData && geoData.length > 0) {
+                locationName = `${geoData[0].name}, ${geoData[0].country}`;
+              }
+            }
+          } catch (geoError) {
+            console.error("Geocoding error:", geoError);
+            // Keep using coordinates if geocoding fails
+          }
           
           setWeatherData({
             temp: Math.round(currentForecast.temp),
@@ -166,26 +186,40 @@ const WeatherWidget: React.FC = () => {
             icon: currentForecast.icon,
             location: locationName
           });
+          
+          if (response.message) {
+            toast({
+              title: "Weather Info",
+              description: response.message
+            });
+          }
         } else {
-          throw new Error(forecastResponse.message || 'Failed to fetch weather data');
+          throw new Error(response.message || 'Failed to fetch weather data');
         }
       } catch (error) {
         console.error("Error fetching weather data:", error);
-        toast({
-          title: "Weather Data Error",
-          description: "Failed to fetch weather data. Using default values.",
-          variant: "destructive"
-        });
         
-        // Fallback to mock data if API call fails
-        setWeatherData({
-          temp: 32,
-          humidity: 65,
-          rainfall: 0,
-          description: 'Partly Cloudy',
-          icon: '03d',
-          location: 'Pune, Maharashtra'
-        });
+        // Use our mock data from the service if API fails
+        const mockResponse = await weatherService.getForecast(0, 0); // Coordinates don't matter for mock data
+        
+        if (mockResponse.forecasts.length > 0) {
+          const mockForecast = mockResponse.forecasts[0];
+          
+          setWeatherData({
+            temp: Math.round(mockForecast.temp),
+            humidity: mockForecast.humidity,
+            rainfall: mockForecast.rainfall,
+            description: mockForecast.description,
+            icon: mockForecast.icon,
+            location: 'Default Location'
+          });
+          
+          toast({
+            title: "Weather Data Error",
+            description: "Using estimated weather data.",
+            variant: "destructive"
+          });
+        }
       } finally {
         setIsLoading(false);
       }
@@ -309,6 +343,12 @@ const WeatherWidget: React.FC = () => {
                 {t.irrigationAdvice || "Irrigation Advice"}: {getIrrigationAdvice()}
               </span>
             </div>
+            
+            {forecastResponse && !forecastResponse.success && (
+              <div className="text-xs text-gray-500 mt-1 italic text-center">
+                (Using estimated weather data)
+              </div>
+            )}
           </div>
         )}
       </CardContent>
