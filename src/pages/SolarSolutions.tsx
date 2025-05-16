@@ -1,9 +1,7 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   ArrowLeft,
-  SolarPanel, 
   Sun, 
   Lightbulb, 
   Info, 
@@ -38,7 +36,7 @@ const solarTools = [
   {
     id: 'pump',
     name: 'solarPumps',
-    icon: SolarPanel,
+    icon: Sun,
     whatIsIt: 'Solar-powered water pumps that use energy from sunlight to pump water for irrigation.',
     howItHelps: 'Eliminates fuel/electricity costs, reliable in off-grid areas, environmentally friendly, low maintenance costs.',
     whereToGet: 'MNRE approved vendors, agricultural equipment dealers, PM-KUSUM scheme applications.'
