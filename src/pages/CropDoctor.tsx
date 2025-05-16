@@ -1,15 +1,16 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Camera, Image, ArrowLeft, MapPin, Leaf, TestTube, Bug } from 'lucide-react';
+import { Camera, Image, ArrowLeft, MapPin, Leaf, TestTube, Bug, Settings } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/components/ui/use-toast";
 import { useLanguage } from '@/contexts/LanguageContext';
 import VoiceInput from '@/components/VoiceInput';
 import offlineStorage from '@/services/OfflineStorage';
-import { identifyPlantDisease } from '@/services/PlantApi';
+import { identifyPlantDisease, saveGeminiApiKey, getGeminiApiKey, hasGeminiApiKey } from '@/services/PlantApi';
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { Input } from "@/components/ui/input";
 
 const CropDoctor: React.FC = () => {
   const { t } = useLanguage();
@@ -21,6 +22,8 @@ const CropDoctor: React.FC = () => {
   const [diagnosisResult, setDiagnosisResult] = useState<any>(null);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [isCameraDialogOpen, setIsCameraDialogOpen] = useState(false);
+  const [isApiKeyDialogOpen, setIsApiKeyDialogOpen] = useState(false);
+  const [geminiApiKey, setGeminiApiKey] = useState('');
   const [location, setLocation] = useState<{lat: number, lng: number} | null>(null);
   const [locationStatus, setLocationStatus] = useState("");
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -29,6 +32,12 @@ const CropDoctor: React.FC = () => {
   // Get location on component mount
   useEffect(() => {
     getLocation();
+    
+    // Check if we have a stored Gemini API key
+    const storedKey = getGeminiApiKey();
+    if (storedKey) {
+      setGeminiApiKey(storedKey);
+    }
     
     // Cleanup function to stop any active streams when component unmounts
     return () => {
@@ -222,16 +231,48 @@ const CropDoctor: React.FC = () => {
       getLocation();
     }
   };
+
+  const openApiKeyDialog = () => {
+    setIsApiKeyDialogOpen(true);
+  };
+
+  const handleSaveApiKey = () => {
+    if (geminiApiKey.trim()) {
+      saveGeminiApiKey(geminiApiKey);
+      toast({
+        title: "API Key Saved",
+        description: "Your Gemini API key has been saved.",
+      });
+      setIsApiKeyDialogOpen(false);
+    } else {
+      toast({
+        title: "Invalid API Key",
+        description: "Please enter a valid API key.",
+        variant: "destructive"
+      });
+    }
+  };
   
   return (
     <div className="container mx-auto px-4 py-8">
-      <Button 
-        variant="ghost" 
-        className="mb-6" 
-        onClick={() => navigate('/')}
-      >
-        <ArrowLeft className="mr-2 h-4 w-4" /> Back
-      </Button>
+      <div className="flex justify-between items-center mb-6">
+        <Button 
+          variant="ghost" 
+          onClick={() => navigate('/')}
+        >
+          <ArrowLeft className="mr-2 h-4 w-4" /> Back
+        </Button>
+        
+        <Button 
+          variant="outline" 
+          size="sm" 
+          onClick={openApiKeyDialog}
+          className="flex items-center"
+        >
+          <Settings className="h-4 w-4 mr-2" />
+          {hasGeminiApiKey() ? t.geminiAnalysis : t.useGeminiAI}
+        </Button>
+      </div>
       
       <header className="mb-8 text-center">
         <h1 className="text-3xl font-bold text-crop-green-dark">{t.cropDoctor}</h1>
@@ -301,7 +342,7 @@ const CropDoctor: React.FC = () => {
                     <div>
                       <h3 className="text-xl font-bold text-red-600">{diagnosisResult.disease}</h3>
                       <p className="text-sm text-gray-500">
-                        AI Confidence: {diagnosisResult.confidence}%
+                        {hasGeminiApiKey() ? t.geminiAnalysis : 'AI'} Confidence: {diagnosisResult.confidence}%
                       </p>
                     </div>
                     <Bug className="h-8 w-8 text-red-500" />
@@ -359,6 +400,43 @@ const CropDoctor: React.FC = () => {
           <div className="flex justify-between">
             <Button variant="outline" onClick={stopCameraStream}>Cancel</Button>
             <Button onClick={capturePhoto}>Capture</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+      
+      {/* Gemini API Key Dialog */}
+      <Dialog open={isApiKeyDialogOpen} onOpenChange={setIsApiKeyDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogTitle>{t.enterGeminiKey}</DialogTitle>
+          <DialogDescription>
+            Enter your Gemini API key to enable AI-powered plant disease detection.
+          </DialogDescription>
+          
+          <div className="grid gap-4 py-4">
+            <Input
+              placeholder="Enter Gemini API key..."
+              type="password"
+              value={geminiApiKey}
+              onChange={(e) => setGeminiApiKey(e.target.value)}
+            />
+            <p className="text-xs text-gray-500">
+              Get your API key from the Google AI Studio: 
+              <a href="https://aistudio.google.com/app/apikey" 
+                 target="_blank" 
+                 rel="noopener noreferrer"
+                 className="text-blue-500 hover:underline ml-1">
+                aistudio.google.com
+              </a>
+            </p>
+          </div>
+          
+          <div className="flex justify-end gap-2">
+            <Button variant="outline" onClick={() => setIsApiKeyDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleSaveApiKey}>
+              {t.saveKey}
+            </Button>
           </div>
         </DialogContent>
       </Dialog>

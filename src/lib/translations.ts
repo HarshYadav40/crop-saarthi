@@ -55,7 +55,40 @@ export const translations = {
     cropType: "Crop Type",
     bookmarkAdded: "Scheme bookmarked",
     bookmarkRemoved: "Bookmark removed",
-    offlineDesc: "You're offline. Limited features available."
+    offlineDesc: "You're offline. Limited features available.",
+    // Solar solutions translations
+    solarSolutions: "Solar Solutions",
+    whyGoSolar: "Why Go Solar",
+    toolsYouCanUse: "Solar Equipment",
+    calculateSavings: "Calculate Savings",
+    getSubsidyInfo: "Get Subsidy Info",
+    solarEquipment: "Solar Equipment",
+    dailyUsageHours: "Daily Usage Hours",
+    fuelCost: "Fuel Cost per Liter (₹)",
+    state: "State",
+    calculate: "Calculate",
+    monthlySavings: "Monthly Savings",
+    yearlySavings: "Yearly Savings",
+    subsidyInfo: "Subsidy Information",
+    applicationProcess: "Application Process",
+    requestCallback: "Request Callback",
+    // Welfare scheme notifications
+    schemeAddedToBookmarks: "Scheme added to bookmarks",
+    schemeRemovedFromBookmarks: "Scheme removed from bookmarks",
+    notificationsEnabled: "Notifications Enabled",
+    notificationsDesc: "You will receive updates about new schemes",
+    notificationsDisabled: "Notifications Disabled",
+    notificationsDisabledDesc: "You will not receive scheme updates",
+    filtersReset: "Filters Reset",
+    filtersResetDesc: "All filters have been cleared",
+    offlineSchemes: "Offline Schemes",
+    allSchemes: "All Schemes",
+    bookmarked: "Bookmarked",
+    // Gemini API related translations
+    useGeminiAI: "Use Gemini AI",
+    enterGeminiKey: "Enter Gemini API Key",
+    saveKey: "Save Key",
+    geminiAnalysis: "Gemini AI Analysis"
   },
   hi: {
     appName: "क्रॉप साथी",
@@ -112,7 +145,40 @@ export const translations = {
     cropType: "फसल प्रकार",
     bookmarkAdded: "योजना बुकमार्क की गई",
     bookmarkRemoved: "बुकमार्क हटा दिया गया",
-    offlineDesc: "आप ऑफ़लाइन हैं। सीमित सुविधाएँ उपलब्ध हैं।"
+    offlineDesc: "आप ऑफ़लाइन हैं। सीमित सुविधाएँ उपलब्ध हैं।",
+    // Solar solutions translations
+    solarSolutions: "सौर समाधान",
+    whyGoSolar: "सौर ऊर्जा क्यों अपनाएं",
+    toolsYouCanUse: "सौर उपकरण",
+    calculateSavings: "बचत की गणना करें",
+    getSubsidyInfo: "सब्सिडी जानकारी प्राप्त करें",
+    solarEquipment: "सौर उपकरण",
+    dailyUsageHours: "दैनिक उपयोग घंटे",
+    fuelCost: "प्रति लीटर ईंधन लागत (₹)",
+    state: "राज्य",
+    calculate: "गणना करें",
+    monthlySavings: "मासिक बचत",
+    yearlySavings: "वार्षिक बचत",
+    subsidyInfo: "सब्सिडी जानकारी",
+    applicationProcess: "आवेदन प्रक्रिया",
+    requestCallback: "कॉलबैक का अनुरोध करें",
+    // Welfare scheme notifications
+    schemeAddedToBookmarks: "योजना बुकमार्क में जोड़ी गई",
+    schemeRemovedFromBookmarks: "बुकमार्क से योजना हटा दी गई",
+    notificationsEnabled: "सूचनाएँ सक्षम",
+    notificationsDesc: "आपको नई योजनाओं के बारे में अपडेट मिलेंगे",
+    notificationsDisabled: "सूचनाएँ अक्षम",
+    notificationsDisabledDesc: "आपको योजना अपडेट प्राप्त नहीं होंगे",
+    filtersReset: "फ़िल्टर रीसेट",
+    filtersResetDesc: "सभी फ़िल्टर साफ़ कर दिए गए हैं",
+    offlineSchemes: "ऑफ़लाइन योजनाएँ",
+    allSchemes: "सभी योजनाएँ",
+    bookmarked: "बुकमार्क की गई",
+    // Gemini API related translations
+    useGeminiAI: "जेमिनी एआई का उपयोग करें",
+    enterGeminiKey: "जेमिनी एपीआई कुंजी दर्ज करें",
+    saveKey: "कुंजी सहेजें",
+    geminiAnalysis: "जेमिनी एआई विश्लेषण"
   }
 };
 

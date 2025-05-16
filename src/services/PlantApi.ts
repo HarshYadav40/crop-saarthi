@@ -23,6 +23,26 @@ interface PlantTreatment {
   organicSolution: string;
 }
 
+// Interface for Gemini API request
+interface GeminiRequest {
+  contents: {
+    parts: {
+      text?: string;
+      inlineData?: {
+        mimeType: string;
+        data: string;
+      };
+    }[];
+    role: string;
+  }[];
+  generationConfig: {
+    temperature: number;
+    topP: number;
+    topK: number;
+    maxOutputTokens: number;
+  };
+}
+
 // Database of eco-friendly remedies for common plant diseases
 const plantRemediesDatabase: Record<string, { treatment: string, organicSolution: string }> = {
   "Tomato Early Blight": {
@@ -76,6 +96,9 @@ const defaultRemedy = {
 // Cache for storing previous identification results
 const imageResultCache = new Map<string, PlantTreatment>();
 
+// Storage key for the Gemini API key
+const GEMINI_API_KEY_STORAGE_KEY = 'geminiApiKey';
+
 /**
  * Identifies plant diseases using image analysis
  * @param imageBase64 Base64 encoded image (with or without the data:image prefix)
@@ -92,9 +115,27 @@ export const identifyPlantDisease = async (imageBase64: string): Promise<PlantTr
       return imageResultCache.get(imageHash)!;
     }
     
-    // For now, since the Hugging Face API implementation isn't working reliably,
-    // we'll use our deterministic fallback approach based on the image content
+    // Check if we have a Gemini API key stored
+    const geminiApiKey = localStorage.getItem(GEMINI_API_KEY_STORAGE_KEY);
+    
+    if (geminiApiKey) {
+      try {
+        // Try using Gemini API
+        console.log("Attempting to use Gemini API for plant analysis");
+        const result = await analyzeWithGeminiAPI(imageBase64, geminiApiKey);
+        
+        // Cache the result
+        imageResultCache.set(imageHash, result);
+        return result;
+      } catch (geminiError) {
+        console.error("Error with Gemini API:", geminiError);
+        // Fall through to fallback method if Gemini fails
+      }
+    }
+    
+    // Use our deterministic fallback approach based on the image content
     // This ensures consistent results for the same image
+    console.log("Using fallback plant disease identification method");
     const result = getConsistentFallbackData(imageBase64);
     
     // Cache the result
@@ -104,9 +145,160 @@ export const identifyPlantDisease = async (imageBase64: string): Promise<PlantTr
   } catch (error) {
     console.error("Error identifying plant disease:", error);
     
-    // Fallback to consistent sample data if API fails
+    // Fallback to consistent sample data if all methods fail
     return getConsistentFallbackData(imageBase64);
   }
+};
+
+/**
+ * Analyze plant image using Google's Gemini API
+ * @param imageBase64 The base64 encoded image
+ * @param apiKey The Gemini API key
+ * @returns Plant disease information and treatment
+ */
+async function analyzeWithGeminiAPI(imageBase64: string, apiKey: string): Promise<PlantTreatment> {
+  // Make sure image has the data:image prefix
+  let imageData = imageBase64;
+  if (!imageData.startsWith('data:image/')) {
+    imageData = `data:image/jpeg;base64,${imageData}`;
+  }
+  
+  // Extract the base64 data without the prefix
+  const base64Data = imageData.split(',')[1];
+  
+  // Create the request for Gemini API
+  const request: GeminiRequest = {
+    contents: [
+      {
+        parts: [
+          {
+            text: "You are a plant disease expert. Analyze this image of a plant and identify any diseases. " +
+                 "Provide the disease name, confidence level (as a percentage between 0-100), " +
+                 "treatment recommendations, and organic solution alternatives. " +
+                 "Format your response as JSON with fields: disease, confidence, treatment, organicSolution. " +
+                 "If you cannot identify the disease with certainty, indicate it's 'Unknown' with your best guess."
+          },
+          {
+            inlineData: {
+              mimeType: "image/jpeg",
+              data: base64Data
+            }
+          }
+        ],
+        role: "user"
+      }
+    ],
+    generationConfig: {
+      temperature: 0.4,
+      topP: 0.95,
+      topK: 40,
+      maxOutputTokens: 1024
+    }
+  };
+  
+  // Call the Gemini API
+  console.log("Calling Gemini API");
+  const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-pro-vision:generateContent?key=${apiKey}`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(request)
+  });
+  
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`Gemini API error: ${response.status} - ${errorText}`);
+  }
+  
+  const data = await response.json();
+  console.log("Gemini API response:", data);
+  
+  // Extract the text content
+  let textContent = '';
+  try {
+    textContent = data.candidates[0].content.parts[0].text;
+  } catch (e) {
+    throw new Error("Failed to extract text content from Gemini API response");
+  }
+  
+  // Try to parse the JSON response
+  try {
+    // Look for JSON in the response
+    const jsonMatch = textContent.match(/\{[\s\S]*\}/);
+    if (jsonMatch) {
+      const jsonData = JSON.parse(jsonMatch[0]);
+      
+      // Validate and ensure we have all required fields
+      const disease = jsonData.disease || "Unknown";
+      const confidence = typeof jsonData.confidence === 'number' ? jsonData.confidence : 
+                         parseInt(jsonData.confidence) || 75;
+      const treatment = jsonData.treatment || defaultRemedy.treatment;
+      const organicSolution = jsonData.organicSolution || defaultRemedy.organicSolution;
+      
+      return {
+        disease,
+        confidence,
+        treatment,
+        organicSolution
+      };
+    }
+  } catch (jsonError) {
+    console.error("Error parsing Gemini response as JSON:", jsonError);
+  }
+  
+  // If we couldn't parse JSON, try to extract information from the text
+  try {
+    // Look for disease mentions in the text
+    const diseaseMatch = textContent.match(/disease[:\s]+([\w\s]+)/i);
+    const disease = diseaseMatch ? diseaseMatch[1].trim() : "Unknown";
+    
+    // Look for confidence mentions
+    const confidenceMatch = textContent.match(/confidence[:\s]+(\d+)/i);
+    const confidence = confidenceMatch ? parseInt(confidenceMatch[1]) : 75;
+    
+    // Look for treatment mentions
+    const treatmentMatch = textContent.match(/treatment[:\s]+([\w\s,.]+)/i);
+    const treatment = treatmentMatch ? treatmentMatch[1].trim() : defaultRemedy.treatment;
+    
+    // Look for organic solution mentions
+    const organicMatch = textContent.match(/organic[:\s]+([\w\s,.]+)/i);
+    const organicSolution = organicMatch ? organicMatch[1].trim() : defaultRemedy.organicSolution;
+    
+    return {
+      disease,
+      confidence,
+      treatment,
+      organicSolution
+    };
+  } catch (parseError) {
+    console.error("Error extracting information from text response:", parseError);
+    throw new Error("Failed to parse Gemini API response");
+  }
+}
+
+/**
+ * Save the Gemini API key to localStorage
+ * @param apiKey The API key to save
+ */
+export const saveGeminiApiKey = (apiKey: string): void => {
+  localStorage.setItem(GEMINI_API_KEY_STORAGE_KEY, apiKey);
+};
+
+/**
+ * Get the stored Gemini API key
+ * @returns The stored API key or null if not set
+ */
+export const getGeminiApiKey = (): string | null => {
+  return localStorage.getItem(GEMINI_API_KEY_STORAGE_KEY);
+};
+
+/**
+ * Check if a Gemini API key is stored
+ * @returns True if API key is stored, false otherwise
+ */
+export const hasGeminiApiKey = (): boolean => {
+  return localStorage.getItem(GEMINI_API_KEY_STORAGE_KEY) !== null;
 };
 
 /**
