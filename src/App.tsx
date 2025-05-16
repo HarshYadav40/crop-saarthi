@@ -11,6 +11,7 @@ import Dashboard from "./pages/Dashboard";
 import CropDoctor from "./pages/CropDoctor";
 import IrrigationPlanner from "./pages/IrrigationPlanner";
 import SolarSolutions from "./pages/SolarSolutions";
+import WelfareSchemes from "./pages/WelfareSchemes";
 import Demo from "./pages/Demo";
 import NotFound from "./pages/NotFound";
 
@@ -29,6 +30,7 @@ const App = () => (
               <Route path="/crop-doctor" element={<CropDoctor />} />
               <Route path="/irrigation-planner" element={<IrrigationPlanner />} />
               <Route path="/solar-solutions" element={<SolarSolutions />} />
+              <Route path="/welfare-schemes" element={<WelfareSchemes />} />
               <Route path="/demo" element={<Demo />} />
               <Route path="*" element={<NotFound />} />
             </Routes>

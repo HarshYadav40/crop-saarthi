@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Grid, Leaf, CloudRain, Sun, FileText, Info } from 'lucide-react';
@@ -70,6 +69,9 @@ const Dashboard: React.FC = () => {
     } else if (lowerTranscript.includes('solar') || lowerTranscript.includes('sun') || 
                lowerTranscript.includes('energy') || lowerTranscript.includes('सौर')) {
       navigate('/solar-solutions');
+    } else if (lowerTranscript.includes('welfare') || lowerTranscript.includes('scheme') || 
+               lowerTranscript.includes('government') || lowerTranscript.includes('योजना')) {
+      navigate('/welfare-schemes');
     }
   };
 
@@ -149,16 +151,11 @@ const Dashboard: React.FC = () => {
           />
           
           <FeatureCard
-            title={t.schemes}
-            description={t.schemesDesc}
+            title={t.welfareSchemes || "Welfare Schemes"}
+            description={t.welfareDesc || "Discover government and CSR-funded schemes for farmers"}
             icon={<Info className="w-10 h-10" />}
             bgColor="bg-crop-sky"
-            onClick={() => {
-              toast({
-                title: "Coming Soon",
-                description: "The Government Schemes module will be available in the next update.",
-              });
-            }}
+            onClick={() => navigate('/welfare-schemes')}
           />
           
           <FeatureCard
