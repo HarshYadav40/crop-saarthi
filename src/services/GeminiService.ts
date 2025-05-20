@@ -31,6 +31,7 @@ interface GeminiResponse {
 
 // Storage key for the Gemini API key
 const GEMINI_API_KEY_STORAGE_KEY = 'geminiApiKey';
+const DEFAULT_GEMINI_API_KEY = 'AIzaSyA7y_jsIXXCOpwXUs5lCF8GX86Q0cL8pxY';
 
 /**
  * Ask a farming-related question to the Gemini API
@@ -39,12 +40,8 @@ const GEMINI_API_KEY_STORAGE_KEY = 'geminiApiKey';
  */
 export const askFarmingQuestion = async (question: string): Promise<string> => {
   try {
-    // Get the API key from localStorage
-    const apiKey = localStorage.getItem(GEMINI_API_KEY_STORAGE_KEY);
-    
-    if (!apiKey) {
-      throw new Error("No Gemini API key found");
-    }
+    // Get the API key from localStorage or use default
+    const apiKey = localStorage.getItem(GEMINI_API_KEY_STORAGE_KEY) || DEFAULT_GEMINI_API_KEY;
     
     // Create the system prompt for farming advice
     const systemPrompt = 
@@ -129,16 +126,16 @@ export const saveGeminiApiKey = (apiKey: string): void => {
 
 /**
  * Get the stored Gemini API key
- * @returns The stored API key or null if not set
+ * @returns The stored API key or default key if not set
  */
-export const getGeminiApiKey = (): string | null => {
-  return localStorage.getItem(GEMINI_API_KEY_STORAGE_KEY);
+export const getGeminiApiKey = (): string => {
+  return localStorage.getItem(GEMINI_API_KEY_STORAGE_KEY) || DEFAULT_GEMINI_API_KEY;
 };
 
 /**
  * Check if a Gemini API key is stored
- * @returns True if API key is stored, false otherwise
+ * @returns True if API key is stored or default key exists, false otherwise
  */
 export const hasGeminiApiKey = (): boolean => {
-  return localStorage.getItem(GEMINI_API_KEY_STORAGE_KEY) !== null;
+  return true; // We always have at least the default key
 };

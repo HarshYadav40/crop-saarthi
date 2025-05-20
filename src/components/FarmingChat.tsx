@@ -21,23 +21,22 @@ const FarmingChat: React.FC = () => {
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isApiKeyDialogOpen, setIsApiKeyDialogOpen] = useState(false);
-  const [geminiApiKey, setGeminiApiKey] = useState('');
+  const [geminiApiKey, setGeminiApiKey] = useState('AIzaSyA7y_jsIXXCOpwXUs5lCF8GX86Q0cL8pxY');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   
   useEffect(() => {
-    // Check if we have a stored Gemini API key
-    const storedKey = getGeminiApiKey();
-    if (storedKey) {
-      setGeminiApiKey(storedKey);
-    } else {
-      // If no API key, show a welcome message explaining the feature
-      setMessages([
-        {
-          type: 'ai',
-          content: t.chatWelcomeMessage
-        }
-      ]);
+    // Save the API key on component mount
+    if (geminiApiKey) {
+      saveGeminiApiKey(geminiApiKey);
     }
+    
+    // Add a welcome message explaining the feature
+    setMessages([
+      {
+        type: 'ai',
+        content: t.chatWelcomeMessage
+      }
+    ]);
   }, [t]);
   
   // Scroll to bottom whenever messages change
@@ -49,12 +48,6 @@ const FarmingChat: React.FC = () => {
   
   const handleSendMessage = async () => {
     if (!input.trim()) return;
-    
-    // Don't allow sending if there's no API key
-    if (!hasGeminiApiKey()) {
-      setIsApiKeyDialogOpen(true);
-      return;
-    }
     
     const userMessage = input.trim();
     setInput('');
@@ -107,16 +100,6 @@ const FarmingChat: React.FC = () => {
         description: t.apiKeySavedDescription,
       });
       setIsApiKeyDialogOpen(false);
-      
-      // Add a welcome message if this is the first time setting up
-      if (messages.length === 0) {
-        setMessages([
-          {
-            type: 'ai',
-            content: t.chatWelcomeMessage
-          }
-        ]);
-      }
     } else {
       toast({
         title: t.invalidApiKey,
@@ -141,7 +124,7 @@ const FarmingChat: React.FC = () => {
           className="flex items-center"
         >
           <Settings className="h-4 w-4 mr-2" />
-          {hasGeminiApiKey() ? t.changeApiKey : t.setApiKey}
+          {t.changeApiKey}
         </Button>
       </div>
       

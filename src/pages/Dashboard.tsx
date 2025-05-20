@@ -1,88 +1,78 @@
+
 import React from 'react';
+import { Cloud, Droplets, Leaf, SunDim, FileSpreadsheet } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { Card, CardContent } from "@/components/ui/card";
-import LanguageSelector from "@/components/LanguageSelector";
-import FeatureCard from "@/components/FeatureCard";
-import WeatherWidget from "@/components/WeatherWidget";
-import FarmingChatCard from "@/components/FarmingChatCard";
 import { useLanguage } from '@/contexts/LanguageContext';
-import { useToast } from "@/components/ui/use-toast";
-import { useEffect, useState } from 'react';
-import { Sun, CloudRain, Bug, Info } from 'lucide-react';
+import FeatureCard from '@/components/FeatureCard';
+import WeatherWidget from '@/components/WeatherWidget';
+import FarmingChatCard from '@/components/FarmingChatCard';
+import { useMobile } from '@/hooks/use-mobile';
 
 const Dashboard: React.FC = () => {
   const { t } = useLanguage();
+  const isMobile = useMobile();
   const navigate = useNavigate();
-  const { toast } = useToast();
-  const [isOffline, setIsOffline] = useState(!navigator.onLine);
-
-  useEffect(() => {
-    const handleOfflineStatus = () => {
-      setIsOffline(!navigator.onLine);
-      toast({
-        title: t.offlineMode,
-        description: t.offlineDesc,
-        variant: "destructive",
-      });
-    };
-
-    window.addEventListener('offline', handleOfflineStatus);
-    window.addEventListener('online', handleOfflineStatus);
-
-    return () => {
-      window.removeEventListener('offline', handleOfflineStatus);
-      window.removeEventListener('online', handleOfflineStatus);
-    };
-  }, [t, toast]);
   
   return (
     <div className="container mx-auto px-4 py-8">
-      <header className="flex items-center justify-between mb-8">
-        <div>
-          <h1 className="text-3xl font-bold text-crop-green-dark">{t.appName}</h1>
-          <p className="text-lg text-gray-600">{t.tagline}</p>
-        </div>
-        <LanguageSelector />
-      </header>
+      <h1 className="text-3xl font-bold mb-2 text-crop-green-dark">
+        {t.welcomeToCropSaarthi}
+      </h1>
+      <p className="text-lg mb-8 text-gray-600">
+        {t.dashboardTagline}
+      </p>
       
-      <WeatherWidget />
+      <div className={`${isMobile ? 'mb-8' : 'float-right w-1/3 ml-8 mb-8'}`}>
+        <WeatherWidget />
+      </div>
       
-      <h2 className="text-xl font-semibold mt-8 mb-4">{t.features}</h2>
-      
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <FeatureCard 
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+        <FeatureCard
           title={t.cropDoctor}
           description={t.cropDoctorDesc}
-          icon="bug"
-          color="green"
+          icon="Leaf"
+          bgColor="bg-crop-green-light"
           onClick={() => navigate('/crop-doctor')}
         />
-        <FeatureCard 
-          title={t.irrigation}
+        
+        <FeatureCard
+          title={t.irrigationPlanner}
           description={t.irrigationDesc}
-          icon="cloud-rain"
-          color="blue"
+          icon="Droplets"
+          bgColor="bg-crop-blue-light"
           onClick={() => navigate('/irrigation-planner')}
         />
-        <FeatureCard 
-          title={t.solar}
+        
+        <FeatureCard
+          title={t.solarSolutions}
           description={t.solarDesc}
-          icon="sun"
-          color="yellow"
+          icon="SunDim"
+          bgColor="bg-crop-yellow-light"
           onClick={() => navigate('/solar-solutions')}
         />
-        <FeatureCard 
+        
+        <FeatureCard
           title={t.welfareSchemes}
           description={t.welfareDesc}
-          icon="info"
-          color="purple"
+          icon="FileSpreadsheet"
+          bgColor="bg-crop-purple-light"
           onClick={() => navigate('/welfare-schemes')}
         />
       </div>
       
-      <h2 className="text-xl font-semibold mt-8 mb-4">{t.aiAssistant}</h2>
-      <FarmingChatCard />
+      <div className="mb-8">
+        <FarmingChatCard />
+      </div>
       
+      <div className="bg-crop-green-light/30 p-6 rounded-lg mb-8">
+        <h2 className="text-xl font-bold mb-2 text-crop-green-dark">{t.quickTips}</h2>
+        <ul className="list-disc list-inside space-y-2 text-gray-700">
+          <li>{t.tipWeather}</li>
+          <li>{t.tipCropHealth}</li>
+          <li>{t.tipWaterConservation}</li>
+          <li>{t.tipMarketPrices}</li>
+        </ul>
+      </div>
     </div>
   );
 };
