@@ -1,4 +1,3 @@
-
 export const translations = {
   en: {
     appName: "CropSaarthi",
@@ -12,6 +11,8 @@ export const translations = {
     irrigationDesc: "Smart irrigation planning based on weather and crops",
     solarSolutions: "Solar Solutions",
     solarDesc: "Solar-powered farming equipment guidance",
+    welfareSchemes: "Welfare Schemes",
+    welfareDesc: "Government & CSR schemes for farmers",
     soil: "Soil Health",
     soilDesc: "Check soil health and get recommendations",
     detecting: "Analyzing your plant...",
@@ -20,6 +21,7 @@ export const translations = {
     uploadPlant: "Upload a photo of your plant for disease diagnosis",
     weatherToday: "Today's Weather",
     humidity: "Humidity",
+    irrigation: "Irrigation Planner",
     irrigationAdvice: "Irrigation Advice",
     skipIrrigation: "Skip irrigation today due to expected rainfall",
     reduceWatering: "Consider reducing watering due to high humidity",
@@ -38,8 +40,6 @@ export const translations = {
     tipWaterConservation: "Consider drip irrigation to save water and reduce weed growth.",
     tipMarketPrices: "Monitor market prices before harvesting to maximize profits.",
     // Welfare scheme translations
-    welfareSchemes: "Welfare Schemes",
-    welfareDesc: "Government & CSR schemes for farmers",
     government: "Government",
     active: "Active",
     expiringSoon: "Expiring Soon",
@@ -143,6 +143,8 @@ export const translations = {
     irrigationDesc: "मौसम और फसलों के आधार पर स्मार्ट सिंचाई योजना",
     solarSolutions: "सौर समाधान",
     solarDesc: "सौर ऊर्जा से चलने वाले कृषि उपकरणों के लिए मार्गदर्शन",
+    welfareSchemes: "कल्याण योजनाएँ",
+    welfareDesc: "किसानों के लिए सरकारी और सीएसआर योजनाएँ",
     soil: "मिट्टी स्वास्थ्य",
     soilDesc: "मिट्टी का स्वास्थ्य जांचें और सिफारिशें प्राप्त करें",
     detecting: "आपके पौधे का विश्लेषण किया जा रहा है...",
@@ -151,7 +153,8 @@ export const translations = {
     uploadPlant: "रोग निदान के लिए अपने पौधे की फोटो अपलोड करें",
     weatherToday: "आज का मौसम",
     humidity: "आर्द्रता",
-    irrigationAdvice: "सिंचाई सलाह",
+    irrigation: "Irrigation Planner",
+    irrigationAdvice: "Irrigation Advice",
     skipIrrigation: "अपेक्षित वर्षा के कारण आज सिंचाई छोड़ दें",
     reduceWatering: "उच्च आर्द्रता के कारण पानी कम करने पर विचार करें",
     increaseWatering: "शुष्क परिस्थितियों के कारण पानी बढ़ाने पर विचार करें",
@@ -169,8 +172,6 @@ export const translations = {
     tipWaterConservation: "पानी बचाने और खरपतवार वृद्धि को कम करने के लिए ड्रिप सिंचाई पर विचार करें।",
     tipMarketPrices: "लाभ अधिकतम करने के लिए कटाई से पहले बाजार मूल्यों की निगरानी करें।",
     // Welfare scheme translations
-    welfareSchemes: "कल्याण योजनाएँ",
-    welfareDesc: "किसानों के लिए सरकारी और सीएसआर योजनाएँ",
     government: "सरकारी",
     active: "सक्रिय",
     expiringSoon: "जल्द समाप्त होने वाली",
