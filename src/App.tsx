@@ -12,7 +12,6 @@ import CropDoctor from "./pages/CropDoctor";
 import IrrigationPlanner from "./pages/IrrigationPlanner";
 import SolarSolutions from "./pages/SolarSolutions";
 import WelfareSchemes from "./pages/WelfareSchemes";
-import FarmingChat from "./pages/FarmingChat";
 import Demo from "./pages/Demo";
 import NotFound from "./pages/NotFound";
 
@@ -32,7 +31,6 @@ const App = () => (
               <Route path="/irrigation-planner" element={<IrrigationPlanner />} />
               <Route path="/solar-solutions" element={<SolarSolutions />} />
               <Route path="/welfare-schemes" element={<WelfareSchemes />} />
-              <Route path="/farming-chat" element={<FarmingChat />} />
               <Route path="/demo" element={<Demo />} />
               <Route path="*" element={<NotFound />} />
             </Routes>

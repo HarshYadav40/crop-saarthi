@@ -1,15 +1,15 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Camera, Image, ArrowLeft, MapPin, Leaf, TestTube, Bug, Settings } from 'lucide-react';
+import { Camera, Image, ArrowLeft, MapPin, Leaf, TestTube, Bug } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/components/ui/use-toast";
 import { useLanguage } from '@/contexts/LanguageContext';
 import VoiceInput from '@/components/VoiceInput';
 import offlineStorage from '@/services/OfflineStorage';
-import { identifyPlantDisease, saveGeminiApiKey, getGeminiApiKey, hasGeminiApiKey } from '@/services/PlantApi';
+import { identifyPlantDisease } from '@/services/PlantApi';
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from '@/components/ui/dialog';
-import { Input } from "@/components/ui/input";
 
 const CropDoctor: React.FC = () => {
   const { t } = useLanguage();
@@ -21,9 +21,7 @@ const CropDoctor: React.FC = () => {
   const [diagnosisResult, setDiagnosisResult] = useState<any>(null);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [isCameraDialogOpen, setIsCameraDialogOpen] = useState(false);
-  const [isApiKeyDialogOpen, setIsApiKeyDialogOpen] = useState(false);
-  const [geminiApiKey, setGeminiApiKey] = useState('');
-  const [location, setLocation] = useState<{lat: number, lng: number, name?: string} | null>(null);
+  const [location, setLocation] = useState<{lat: number, lng: number} | null>(null);
   const [locationStatus, setLocationStatus] = useState("");
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
@@ -31,12 +29,6 @@ const CropDoctor: React.FC = () => {
   // Get location on component mount
   useEffect(() => {
     getLocation();
-    
-    // Check if we have a stored Gemini API key
-    const storedKey = getGeminiApiKey();
-    if (storedKey) {
-      setGeminiApiKey(storedKey);
-    }
     
     // Cleanup function to stop any active streams when component unmounts
     return () => {
@@ -51,55 +43,22 @@ const CropDoctor: React.FC = () => {
     
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
-        async (position) => {
+        (position) => {
           const { latitude, longitude } = position.coords;
+          setLocation({ lat: latitude, lng: longitude });
+          setLocationStatus(`Location: ${latitude.toFixed(4)}, ${longitude.toFixed(4)}`);
           
-          // Try to get location name through reverse geocoding
-          try {
-            const response = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json`);
-            const data = await response.json();
-            
-            let locationName = "Unknown";
-            if (data && data.address) {
-              // Try to get most relevant location info
-              locationName = data.address.village || 
-                            data.address.town ||
-                            data.address.city ||
-                            data.address.county ||
-                            data.address.state ||
-                            "Unknown";
-            }
-            
-            setLocation({ 
-              lat: latitude, 
-              lng: longitude,
-              name: locationName 
-            });
-            
-            setLocationStatus(`Location: ${locationName}`);
-            
-            toast({
-              title: t.locationDetected,
-              description: locationName,
-            });
-          } catch (error) {
-            console.error("Error getting location name:", error);
-            // If reverse geocoding fails, just use coordinates
-            setLocation({ lat: latitude, lng: longitude });
-            setLocationStatus(`Location: ${latitude.toFixed(4)}, ${longitude.toFixed(4)}`);
-            
-            toast({
-              title: t.locationDetected,
-              description: `Lat: ${latitude.toFixed(4)}, Long: ${longitude.toFixed(4)}`,
-            });
-          }
+          toast({
+            title: "Location detected",
+            description: `Lat: ${latitude.toFixed(4)}, Long: ${longitude.toFixed(4)}`,
+          });
         },
         (error) => {
           console.error("Error getting location:", error);
           setLocationStatus("Could not detect location");
           
           toast({
-            title: t.locationError,
+            title: "Location Error",
             description: "Could not access your location. Please enable location services.",
             variant: "destructive"
           });
@@ -108,7 +67,7 @@ const CropDoctor: React.FC = () => {
     } else {
       setLocationStatus("Geolocation not supported");
       toast({
-        title: t.locationError,
+        title: "Location Error",
         description: "Geolocation is not supported by your browser.",
         variant: "destructive"
       });
@@ -206,8 +165,11 @@ const CropDoctor: React.FC = () => {
     setIsAnalyzing(true);
     
     try {
-      // Save the image temporarily
-      setSelectedImage(imageDataUrl);
+      // Show analyzing toast
+      toast({
+        title: "AI Analysis Started",
+        description: "Analyzing your plant image for diseases...",
+      });
       
       // Call the plant disease identification API
       const result = await identifyPlantDisease(imageDataUrl);
@@ -223,7 +185,12 @@ const CropDoctor: React.FC = () => {
         treatment: result.treatment,
         timestamp: Date.now(),
         synced: false,
-        location: location ? (location.name || `${location.lat.toFixed(4)}, ${location.lng.toFixed(4)}`) : 'Unknown'
+        location: location ? `${location.lat.toFixed(4)}, ${location.lng.toFixed(4)}` : 'Unknown'
+      });
+      
+      toast({
+        title: "Analysis Complete",
+        description: `Identified ${result.disease} with ${result.confidence}% confidence`,
       });
     } catch (error) {
       console.error("Error processing image:", error);
@@ -255,48 +222,16 @@ const CropDoctor: React.FC = () => {
       getLocation();
     }
   };
-
-  const openApiKeyDialog = () => {
-    setIsApiKeyDialogOpen(true);
-  };
-
-  const handleSaveApiKey = () => {
-    if (geminiApiKey.trim()) {
-      saveGeminiApiKey(geminiApiKey);
-      toast({
-        title: "API Key Saved",
-        description: "Your Gemini API key has been saved.",
-      });
-      setIsApiKeyDialogOpen(false);
-    } else {
-      toast({
-        title: "Invalid API Key",
-        description: "Please enter a valid API key.",
-        variant: "destructive"
-      });
-    }
-  };
   
   return (
     <div className="container mx-auto px-4 py-8">
-      <div className="flex justify-between items-center mb-6">
-        <Button 
-          variant="ghost" 
-          onClick={() => navigate('/')}
-        >
-          <ArrowLeft className="mr-2 h-4 w-4" /> Back
-        </Button>
-        
-        <Button 
-          variant="outline" 
-          size="sm" 
-          onClick={openApiKeyDialog}
-          className="flex items-center"
-        >
-          <Settings className="h-4 w-4 mr-2" />
-          {hasGeminiApiKey() ? t.geminiAnalysis : t.useGeminiAI}
-        </Button>
-      </div>
+      <Button 
+        variant="ghost" 
+        className="mb-6" 
+        onClick={() => navigate('/')}
+      >
+        <ArrowLeft className="mr-2 h-4 w-4" /> Back
+      </Button>
       
       <header className="mb-8 text-center">
         <h1 className="text-3xl font-bold text-crop-green-dark">{t.cropDoctor}</h1>
@@ -310,11 +245,11 @@ const CropDoctor: React.FC = () => {
         )}
       </header>
       
-      {!selectedImage || isAnalyzing ? (
+      {!selectedImage ? (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <Card 
-            className={`hover:shadow-md transition-shadow cursor-pointer bg-crop-green-light/20 ${isAnalyzing ? 'opacity-50 pointer-events-none' : ''}`}
-            onClick={!isAnalyzing ? startCameraStream : undefined}
+            className="hover:shadow-md transition-shadow cursor-pointer bg-crop-green-light/20" 
+            onClick={handleCapture}
           >
             <CardContent className="flex flex-col items-center justify-center py-12">
               <Camera className="h-16 w-16 text-crop-green-dark mb-4" />
@@ -323,8 +258,8 @@ const CropDoctor: React.FC = () => {
           </Card>
           
           <Card 
-            className={`hover:shadow-md transition-shadow cursor-pointer bg-crop-earth-light/20 ${isAnalyzing ? 'opacity-50 pointer-events-none' : ''}`}
-            onClick={!isAnalyzing ? handleImageSelect : undefined}
+            className="hover:shadow-md transition-shadow cursor-pointer bg-crop-earth-light/20" 
+            onClick={handleImageSelect}
           >
             <CardContent className="flex flex-col items-center justify-center py-12">
               <Image className="h-16 w-16 text-crop-earth-dark mb-4" />
@@ -338,26 +273,6 @@ const CropDoctor: React.FC = () => {
               />
             </CardContent>
           </Card>
-          
-          {isAnalyzing && selectedImage && (
-            <div className="md:col-span-2 mt-4">
-              <Card className="overflow-hidden">
-                <div className="relative">
-                  <img 
-                    src={selectedImage} 
-                    alt="Selected plant" 
-                    className="w-full object-cover max-h-64 mx-auto"
-                  />
-                  <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-                    <div className="text-white text-center">
-                      <div className="inline-block animate-spin h-8 w-8 border-4 border-white rounded-full border-t-transparent mb-2"></div>
-                      <p className="text-lg font-medium">{t.detecting}</p>
-                    </div>
-                  </div>
-                </div>
-              </Card>
-            </div>
-          )}
         </div>
       ) : (
         <div className="space-y-6">
@@ -367,6 +282,15 @@ const CropDoctor: React.FC = () => {
               alt="Selected plant" 
               className="w-full h-full object-cover"
             />
+            
+            {isAnalyzing && (
+              <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+                <div className="text-white text-center">
+                  <div className="inline-block animate-spin h-8 w-8 border-4 border-white rounded-full border-t-transparent mb-2"></div>
+                  <p>{t.detecting}</p>
+                </div>
+              </div>
+            )}
           </div>
           
           {diagnosisResult && (
@@ -377,7 +301,7 @@ const CropDoctor: React.FC = () => {
                     <div>
                       <h3 className="text-xl font-bold text-red-600">{diagnosisResult.disease}</h3>
                       <p className="text-sm text-gray-500">
-                        {hasGeminiApiKey() ? t.geminiAnalysis : 'AI'} Confidence: {diagnosisResult.confidence}%
+                        AI Confidence: {diagnosisResult.confidence}%
                       </p>
                     </div>
                     <Bug className="h-8 w-8 text-red-500" />
@@ -435,43 +359,6 @@ const CropDoctor: React.FC = () => {
           <div className="flex justify-between">
             <Button variant="outline" onClick={stopCameraStream}>Cancel</Button>
             <Button onClick={capturePhoto}>Capture</Button>
-          </div>
-        </DialogContent>
-      </Dialog>
-      
-      {/* Gemini API Key Dialog */}
-      <Dialog open={isApiKeyDialogOpen} onOpenChange={setIsApiKeyDialogOpen}>
-        <DialogContent className="sm:max-w-md">
-          <DialogTitle>{t.enterGeminiKey}</DialogTitle>
-          <DialogDescription>
-            Enter your Gemini API key to enable AI-powered plant disease detection.
-          </DialogDescription>
-          
-          <div className="grid gap-4 py-4">
-            <Input
-              placeholder="Enter Gemini API key..."
-              type="password"
-              value={geminiApiKey}
-              onChange={(e) => setGeminiApiKey(e.target.value)}
-            />
-            <p className="text-xs text-gray-500">
-              Get your API key from the Google AI Studio: 
-              <a href="https://aistudio.google.com/app/apikey" 
-                 target="_blank" 
-                 rel="noopener noreferrer"
-                 className="text-blue-500 hover:underline ml-1">
-                aistudio.google.com
-              </a>
-            </p>
-          </div>
-          
-          <div className="flex justify-end gap-2">
-            <Button variant="outline" onClick={() => setIsApiKeyDialogOpen(false)}>
-              Cancel
-            </Button>
-            <Button onClick={handleSaveApiKey}>
-              {t.saveKey}
-            </Button>
           </div>
         </DialogContent>
       </Dialog>
