@@ -1,4 +1,3 @@
-
 export const translations = {
   en: {
     appName: "CropSaarthi",
@@ -102,7 +101,28 @@ export const translations = {
     useGeminiAI: "Use Gemini AI",
     enterGeminiKey: "Enter Gemini API Key",
     saveKey: "Save Key",
-    geminiAnalysis: "Gemini AI Analysis"
+    geminiAnalysis: "Gemini AI Analysis",
+    // Farming Chat translations
+    farmingChat: "Farming Chat",
+    farmingChatDesc: "Ask questions about crops and get AI-powered advice",
+    chatInputPlaceholder: "Ask about crops, diseases, or farming techniques...",
+    chatWelcomeMessage: "Hello! I'm your farming assistant. Ask me any questions about crop diseases, treatments, weather tips, or farming techniques. I'm here to help!",
+    chatErrorMessage: "Sorry, I couldn't process your question right now. Please try again later or check your internet connection.",
+    chatErrorTitle: "Error",
+    chatErrorDescription: "Could not get a response from the AI assistant.",
+    apiKeySaved: "API Key Saved",
+    apiKeySavedDescription: "Your Gemini API key has been saved successfully.",
+    invalidApiKey: "Invalid API Key",
+    invalidApiKeyDescription: "Please enter a valid API key.",
+    enterGeminiKey: "Enter Gemini API Key",
+    enterGeminiKeyDescription: "Enter your Gemini API key to enable the AI farming assistant.",
+    enterGeminiKeyPlaceholder: "Enter Gemini API key...",
+    getGeminiKeyText: "Get your API key from the Google AI Studio:",
+    setApiKey: "Set API Key",
+    changeApiKey: "Change API Key",
+    cancel: "Cancel",
+    back: "Back",
+    aiAssistant: "AI Assistant"
   },
   hi: {
     appName: "क्रॉप साथी",
@@ -206,7 +226,28 @@ export const translations = {
     useGeminiAI: "जेमिनी एआई का उपयोग करें",
     enterGeminiKey: "जेमिनी एपीआई कुंजी दर्ज करें",
     saveKey: "कुंजी सहेजें",
-    geminiAnalysis: "जेमिनी एआई विश्लेषण"
+    geminiAnalysis: "जेमिनी एआई विश्लेषण",
+    // Farming Chat translations
+    farmingChat: "कृषि चैट",
+    farmingChatDesc: "फसलों के बारे में प्रश्न पूछें और एआई-संचालित सलाह प्राप्त करें",
+    chatInputPlaceholder: "फसलों, रोगों या खेती तकनीकों के बारे में पूछें...",
+    chatWelcomeMessage: "नमस्ते! मैं आपका कृषि सहायक हूं। फसल रोगों, उपचारों, मौसम युक्तियों, या खेती तकनीकों के बारे में कोई भी प्रश्न पूछें। मैं मदद करने के लिए यहां हूं!",
+    chatErrorMessage: "क्षमा करें, मैं अभी आपके प्रश्न को प्रोसेस नहीं कर सकता। कृपया बाद में पुनः प्रयास करें या अपने इंटरनेट कनेक्शन की जांच करें।",
+    chatErrorTitle: "त्रुटि",
+    chatErrorDescription: "एआई सहायक से प्रतिक्रिया प्राप्त नहीं हो सकी।",
+    apiKeySaved: "एपीआई कुंजी सहेजी गई",
+    apiKeySavedDescription: "आपकी जेमिनी एपीआई कुंजी सफलतापूर्वक सहेज ली गई है।",
+    invalidApiKey: "अमान्य एपीआई कुंजी",
+    invalidApiKeyDescription: "कृपया एक वैध एपीआई कुंजी दर्ज करें।",
+    enterGeminiKey: "जेमिनी एपीआई कुंजी दर्ज करें",
+    enterGeminiKeyDescription: "एआई कृषि सहायक को सक्षम करने के लिए अपनी जेमिनी एपीआई कुंजी दर्ज करें।",
+    enterGeminiKeyPlaceholder: "जेमिनी एपीआई कुंजी दर्ज करें...",
+    getGeminiKeyText: "Google AI Studio से अपनी API कुंजी प्राप्त करें:",
+    setApiKey: "एपीआई कुंजी सेट करें",
+    changeApiKey: "एपीआई कुंजी बदलें",
+    cancel: "रद्द करें",
+    back: "वापस",
+    aiAssistant: "एआई सहायक"
   }
 };
 
