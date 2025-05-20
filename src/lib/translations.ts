@@ -1,13 +1,16 @@
+
 export const translations = {
   en: {
     appName: "CropSaarthi",
     tagline: "Smart Farming Assistant",
     features: "Features",
+    welcomeToCropSaarthi: "Welcome to CropSaarthi",
+    dashboardTagline: "Your Smart Farming Assistant",
     cropDoctor: "Crop Doctor",
     cropDoctorDesc: "Identify crop diseases and get treatment advice",
-    irrigation: "Irrigation Planner",
+    irrigationPlanner: "Irrigation Planner",
     irrigationDesc: "Smart irrigation planning based on weather and crops",
-    solar: "Solar Solutions",
+    solarSolutions: "Solar Solutions",
     solarDesc: "Solar-powered farming equipment guidance",
     soil: "Soil Health",
     soilDesc: "Check soil health and get recommendations",
@@ -28,6 +31,12 @@ export const translations = {
     offlineMode: "Offline Mode",
     offline: "You are currently offline",
     noInternet: "No internet connection",
+    // Quick tips
+    quickTips: "Quick Tips",
+    tipWeather: "Check the weather forecast daily to plan irrigation and field operations.",
+    tipCropHealth: "Regularly inspect your crops for signs of pests or disease.",
+    tipWaterConservation: "Consider drip irrigation to save water and reduce weed growth.",
+    tipMarketPrices: "Monitor market prices before harvesting to maximize profits.",
     // Welfare scheme translations
     welfareSchemes: "Welfare Schemes",
     welfareDesc: "Government & CSR schemes for farmers",
@@ -55,7 +64,7 @@ export const translations = {
     bookmarkAdded: "Scheme bookmarked",
     bookmarkRemoved: "Bookmark removed",
     offlineDesc: "You're offline. Limited features available.",
-    // Additional Welfare scheme translations to fix errors
+    // Additional Welfare scheme translations
     noSchemesFound: "No schemes found matching your filters",
     resetFilters: "Reset Filters",
     noBookmarkedSchemes: "No bookmarked schemes found",
@@ -70,7 +79,6 @@ export const translations = {
     mnreDesc: "Ministry of New and Renewable Energy - Solar subsidy schemes",
     startupDesc: "Startup India - Support for agri-tech entrepreneurs",
     // Solar solutions translations
-    solarSolutions: "Solar Solutions",
     whyGoSolar: "Why Go Solar",
     toolsYouCanUse: "Solar Equipment",
     calculateSavings: "Calculate Savings",
@@ -114,7 +122,6 @@ export const translations = {
     apiKeySavedDescription: "Your Gemini API key has been saved successfully.",
     invalidApiKey: "Invalid API Key",
     invalidApiKeyDescription: "Please enter a valid API key.",
-    enterGeminiKey: "Enter Gemini API Key",
     enterGeminiKeyDescription: "Enter your Gemini API key to enable the AI farming assistant.",
     enterGeminiKeyPlaceholder: "Enter Gemini API key...",
     getGeminiKeyText: "Get your API key from the Google AI Studio:",
@@ -128,11 +135,13 @@ export const translations = {
     appName: "क्रॉप साथी",
     tagline: "स्मार्ट खेती सहायक",
     features: "सुविधाएँ",
+    welcomeToCropSaarthi: "क्रॉप साथी में आपका स्वागत है",
+    dashboardTagline: "आपका स्मार्ट खेती सहायक",
     cropDoctor: "फसल डॉक्टर",
     cropDoctorDesc: "फसल के रोगों की पहचान करें और उपचार की सलाह लें",
-    irrigation: "सिंचाई योजनाकार",
+    irrigationPlanner: "सिंचाई योजनाकार",
     irrigationDesc: "मौसम और फसलों के आधार पर स्मार्ट सिंचाई योजना",
-    solar: "सौर समाधान",
+    solarSolutions: "सौर समाधान",
     solarDesc: "सौर ऊर्जा से चलने वाले कृषि उपकरणों के लिए मार्गदर्शन",
     soil: "मिट्टी स्वास्थ्य",
     soilDesc: "मिट्टी का स्वास्थ्य जांचें और सिफारिशें प्राप्त करें",
@@ -153,6 +162,12 @@ export const translations = {
     offlineMode: "ऑफलाइन मोड",
     offline: "आप वर्तमान में ऑफलाइन हैं",
     noInternet: "इंटरनेट कनेक्शन नहीं है",
+    // Quick tips
+    quickTips: "त्वरित सुझाव",
+    tipWeather: "सिंचाई और खेत कार्यों की योजना बनाने के लिए दैनिक मौसम पूर्वानुमान देखें।",
+    tipCropHealth: "कीटों या बीमारी के संकेतों के लिए अपनी फसलों का नियमित रूप से निरीक्षण करें।",
+    tipWaterConservation: "पानी बचाने और खरपतवार वृद्धि को कम करने के लिए ड्रिप सिंचाई पर विचार करें।",
+    tipMarketPrices: "लाभ अधिकतम करने के लिए कटाई से पहले बाजार मूल्यों की निगरानी करें।",
     // Welfare scheme translations
     welfareSchemes: "कल्याण योजनाएँ",
     welfareDesc: "किसानों के लिए सरकारी और सीएसआर योजनाएँ",
@@ -180,7 +195,7 @@ export const translations = {
     bookmarkAdded: "योजना बुकमार्क की गई",
     bookmarkRemoved: "बुकमार्क हटा दिया गया",
     offlineDesc: "आप ऑफ़लाइन हैं। सीमित सुविधाएँ उपलब्ध हैं।",
-    // Additional Welfare scheme translations to fix errors
+    // Additional Welfare scheme translations
     noSchemesFound: "आपके फ़िल्टर से मेल खाती कोई योजना नहीं मिली",
     resetFilters: "फ़िल्टर रीसेट करें",
     noBookmarkedSchemes: "कोई बुकमार्क की गई योजना नहीं मिली",
@@ -195,7 +210,6 @@ export const translations = {
     mnreDesc: "नवीन और नवीकरणीय ऊर्जा मंत्रालय - सौर सब्सिडी योजनाएँ",
     startupDesc: "स्टार्टअप इंडिया - कृषि-तकनीकी उद्यमियों के लिए समर्थन",
     // Solar solutions translations
-    solarSolutions: "सौर समाधान",
     whyGoSolar: "सौर ऊर्जा क्यों अपनाएं",
     toolsYouCanUse: "सौर उपकरण",
     calculateSavings: "बचत की गणना करें",
@@ -239,7 +253,6 @@ export const translations = {
     apiKeySavedDescription: "आपकी जेमिनी एपीआई कुंजी सफलतापूर्वक सहेज ली गई है।",
     invalidApiKey: "अमान्य एपीआई कुंजी",
     invalidApiKeyDescription: "कृपया एक वैध एपीआई कुंजी दर्ज करें।",
-    enterGeminiKey: "जेमिनी एपीआई कुंजी दर्ज करें",
     enterGeminiKeyDescription: "एआई कृषि सहायक को सक्षम करने के लिए अपनी जेमिनी एपीआई कुंजी दर्ज करें।",
     enterGeminiKeyPlaceholder: "जेमिनी एपीआई कुंजी दर्ज करें...",
     getGeminiKeyText: "Google AI Studio से अपनी API कुंजी प्राप्त करें:",

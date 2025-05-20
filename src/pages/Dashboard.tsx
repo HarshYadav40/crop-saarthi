@@ -6,11 +6,11 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import FeatureCard from '@/components/FeatureCard';
 import WeatherWidget from '@/components/WeatherWidget';
 import FarmingChatCard from '@/components/FarmingChatCard';
-import { useMobile } from '@/hooks/use-mobile';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 const Dashboard: React.FC = () => {
   const { t } = useLanguage();
-  const isMobile = useMobile();
+  const isMobile = useIsMobile();
   const navigate = useNavigate();
   
   return (
@@ -30,7 +30,7 @@ const Dashboard: React.FC = () => {
         <FeatureCard
           title={t.cropDoctor}
           description={t.cropDoctorDesc}
-          icon="Leaf"
+          icon={<Leaf className="h-8 w-8 text-crop-green-dark" />}
           bgColor="bg-crop-green-light"
           onClick={() => navigate('/crop-doctor')}
         />
@@ -38,7 +38,7 @@ const Dashboard: React.FC = () => {
         <FeatureCard
           title={t.irrigationPlanner}
           description={t.irrigationDesc}
-          icon="Droplets"
+          icon={<Droplets className="h-8 w-8 text-crop-blue-dark" />}
           bgColor="bg-crop-blue-light"
           onClick={() => navigate('/irrigation-planner')}
         />
@@ -46,7 +46,7 @@ const Dashboard: React.FC = () => {
         <FeatureCard
           title={t.solarSolutions}
           description={t.solarDesc}
-          icon="SunDim"
+          icon={<SunDim className="h-8 w-8 text-crop-yellow-dark" />}
           bgColor="bg-crop-yellow-light"
           onClick={() => navigate('/solar-solutions')}
         />
@@ -54,7 +54,7 @@ const Dashboard: React.FC = () => {
         <FeatureCard
           title={t.welfareSchemes}
           description={t.welfareDesc}
-          icon="FileSpreadsheet"
+          icon={<FileSpreadsheet className="h-8 w-8 text-crop-purple-dark" />}
           bgColor="bg-crop-purple-light"
           onClick={() => navigate('/welfare-schemes')}
         />
