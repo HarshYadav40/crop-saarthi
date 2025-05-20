@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Camera, Image, ArrowLeft, MapPin, Leaf, TestTube, Bug, Settings } from 'lucide-react';
@@ -24,7 +23,7 @@ const CropDoctor: React.FC = () => {
   const [isCameraDialogOpen, setIsCameraDialogOpen] = useState(false);
   const [isApiKeyDialogOpen, setIsApiKeyDialogOpen] = useState(false);
   const [geminiApiKey, setGeminiApiKey] = useState('');
-  const [location, setLocation] = useState<{lat: number, lng: number} | null>(null);
+  const [location, setLocation] = useState<{lat: number, lng: number, name?: string} | null>(null);
   const [locationStatus, setLocationStatus] = useState("");
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
@@ -52,22 +51,55 @@ const CropDoctor: React.FC = () => {
     
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
-        (position) => {
+        async (position) => {
           const { latitude, longitude } = position.coords;
-          setLocation({ lat: latitude, lng: longitude });
-          setLocationStatus(`Location: ${latitude.toFixed(4)}, ${longitude.toFixed(4)}`);
           
-          toast({
-            title: "Location detected",
-            description: `Lat: ${latitude.toFixed(4)}, Long: ${longitude.toFixed(4)}`,
-          });
+          // Try to get location name through reverse geocoding
+          try {
+            const response = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json`);
+            const data = await response.json();
+            
+            let locationName = "Unknown";
+            if (data && data.address) {
+              // Try to get most relevant location info
+              locationName = data.address.village || 
+                            data.address.town ||
+                            data.address.city ||
+                            data.address.county ||
+                            data.address.state ||
+                            "Unknown";
+            }
+            
+            setLocation({ 
+              lat: latitude, 
+              lng: longitude,
+              name: locationName 
+            });
+            
+            setLocationStatus(`Location: ${locationName}`);
+            
+            toast({
+              title: t.locationDetected,
+              description: locationName,
+            });
+          } catch (error) {
+            console.error("Error getting location name:", error);
+            // If reverse geocoding fails, just use coordinates
+            setLocation({ lat: latitude, lng: longitude });
+            setLocationStatus(`Location: ${latitude.toFixed(4)}, ${longitude.toFixed(4)}`);
+            
+            toast({
+              title: t.locationDetected,
+              description: `Lat: ${latitude.toFixed(4)}, Long: ${longitude.toFixed(4)}`,
+            });
+          }
         },
         (error) => {
           console.error("Error getting location:", error);
           setLocationStatus("Could not detect location");
           
           toast({
-            title: "Location Error",
+            title: t.locationError,
             description: "Could not access your location. Please enable location services.",
             variant: "destructive"
           });
@@ -76,7 +108,7 @@ const CropDoctor: React.FC = () => {
     } else {
       setLocationStatus("Geolocation not supported");
       toast({
-        title: "Location Error",
+        title: t.locationError,
         description: "Geolocation is not supported by your browser.",
         variant: "destructive"
       });
@@ -174,11 +206,8 @@ const CropDoctor: React.FC = () => {
     setIsAnalyzing(true);
     
     try {
-      // Show analyzing toast
-      toast({
-        title: "AI Analysis Started",
-        description: "Analyzing your plant image for diseases...",
-      });
+      // Save the image temporarily
+      setSelectedImage(imageDataUrl);
       
       // Call the plant disease identification API
       const result = await identifyPlantDisease(imageDataUrl);
@@ -194,12 +223,7 @@ const CropDoctor: React.FC = () => {
         treatment: result.treatment,
         timestamp: Date.now(),
         synced: false,
-        location: location ? `${location.lat.toFixed(4)}, ${location.lng.toFixed(4)}` : 'Unknown'
-      });
-      
-      toast({
-        title: "Analysis Complete",
-        description: `Identified ${result.disease} with ${result.confidence}% confidence`,
+        location: location ? (location.name || `${location.lat.toFixed(4)}, ${location.lng.toFixed(4)}`) : 'Unknown'
       });
     } catch (error) {
       console.error("Error processing image:", error);
@@ -286,11 +310,11 @@ const CropDoctor: React.FC = () => {
         )}
       </header>
       
-      {!selectedImage ? (
+      {!selectedImage || isAnalyzing ? (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <Card 
-            className="hover:shadow-md transition-shadow cursor-pointer bg-crop-green-light/20" 
-            onClick={handleCapture}
+            className={`hover:shadow-md transition-shadow cursor-pointer bg-crop-green-light/20 ${isAnalyzing ? 'opacity-50 pointer-events-none' : ''}`}
+            onClick={!isAnalyzing ? startCameraStream : undefined}
           >
             <CardContent className="flex flex-col items-center justify-center py-12">
               <Camera className="h-16 w-16 text-crop-green-dark mb-4" />
@@ -299,8 +323,8 @@ const CropDoctor: React.FC = () => {
           </Card>
           
           <Card 
-            className="hover:shadow-md transition-shadow cursor-pointer bg-crop-earth-light/20" 
-            onClick={handleImageSelect}
+            className={`hover:shadow-md transition-shadow cursor-pointer bg-crop-earth-light/20 ${isAnalyzing ? 'opacity-50 pointer-events-none' : ''}`}
+            onClick={!isAnalyzing ? handleImageSelect : undefined}
           >
             <CardContent className="flex flex-col items-center justify-center py-12">
               <Image className="h-16 w-16 text-crop-earth-dark mb-4" />
@@ -314,6 +338,26 @@ const CropDoctor: React.FC = () => {
               />
             </CardContent>
           </Card>
+          
+          {isAnalyzing && selectedImage && (
+            <div className="md:col-span-2 mt-4">
+              <Card className="overflow-hidden">
+                <div className="relative">
+                  <img 
+                    src={selectedImage} 
+                    alt="Selected plant" 
+                    className="w-full object-cover max-h-64 mx-auto"
+                  />
+                  <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+                    <div className="text-white text-center">
+                      <div className="inline-block animate-spin h-8 w-8 border-4 border-white rounded-full border-t-transparent mb-2"></div>
+                      <p className="text-lg font-medium">{t.detecting}</p>
+                    </div>
+                  </div>
+                </div>
+              </Card>
+            </div>
+          )}
         </div>
       ) : (
         <div className="space-y-6">
@@ -323,15 +367,6 @@ const CropDoctor: React.FC = () => {
               alt="Selected plant" 
               className="w-full h-full object-cover"
             />
-            
-            {isAnalyzing && (
-              <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-                <div className="text-white text-center">
-                  <div className="inline-block animate-spin h-8 w-8 border-4 border-white rounded-full border-t-transparent mb-2"></div>
-                  <p>{t.detecting}</p>
-                </div>
-              </div>
-            )}
           </div>
           
           {diagnosisResult && (
