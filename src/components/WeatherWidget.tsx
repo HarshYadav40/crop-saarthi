@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CloudSun, Thermometer, MapPin, Search, CloudRain, Droplet } from 'lucide-react';
@@ -39,6 +40,7 @@ const WeatherWidget: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [coordinates, setCoordinates] = useState<{lat: number, lon: number} | null>(null);
   const [showLocationInput, setShowLocationInput] = useState(false);
+  const [locationFetchAttempted, setLocationFetchAttempted] = useState(false);
 
   const form = useForm<LocationFormValues>({
     defaultValues: {
@@ -50,41 +52,41 @@ const WeatherWidget: React.FC = () => {
   useEffect(() => {
     const getLocation = () => {
       if (navigator.geolocation) {
+        const locationTimeout = setTimeout(() => {
+          if (!locationFetchAttempted) {
+            console.log("Location fetch timed out, using default location");
+            // Fallback to default location (Pune)
+            setCoordinates({ lat: 18.52, lon: 73.86 });
+            setLocationFetchAttempted(true);
+          }
+        }, 5000);
+
         navigator.geolocation.getCurrentPosition(
           (position) => {
+            clearTimeout(locationTimeout);
             setCoordinates({
               lat: position.coords.latitude,
               lon: position.coords.longitude
             });
-            toast({
-              title: t.locationDetected,
-              description: `${position.coords.latitude.toFixed(2)}, ${position.coords.longitude.toFixed(2)}`,
-            });
+            setLocationFetchAttempted(true);
           },
           (error) => {
+            clearTimeout(locationTimeout);
             console.error("Error getting location:", error);
-            toast({
-              title: t.locationError,
-              description: error.message,
-              variant: "destructive"
-            });
-            // Fallback to default location (Pune)
+            // Fallback to default location (Pune) - silently
             setCoordinates({ lat: 18.52, lon: 73.86 });
+            setLocationFetchAttempted(true);
           }
         );
       } else {
-        toast({
-          title: "Geolocation Error",
-          description: "Geolocation is not supported by this browser.",
-          variant: "destructive"
-        });
-        // Fallback to default location (Pune)
+        // Fallback to default location (Pune) - silently
         setCoordinates({ lat: 18.52, lon: 73.86 });
+        setLocationFetchAttempted(true);
       }
     };
 
     getLocation();
-  }, [toast, t.locationDetected, t.locationError]);
+  }, [locationFetchAttempted]);
 
   // Search location by name
   const searchLocation = async (locationQuery: string) => {
@@ -93,7 +95,7 @@ const WeatherWidget: React.FC = () => {
     setIsLoading(true);
     
     try {
-      const apiKey = "5a93f404f3bbd3ddd07d3f3ea27009e6"; // Using the updated API key
+      const apiKey = "3b8fc4c0ca8e470cbe9bd3fdc979824d"; // Updated API key
       const url = `https://api.openweathermap.org/geo/1.0/direct?q=${encodeURIComponent(locationQuery)}&limit=1&appid=${apiKey}`;
       
       const response = await fetch(url);
@@ -110,24 +112,17 @@ const WeatherWidget: React.FC = () => {
           lon: location.lon
         });
         
-        toast({
-          title: "Location Changed",
-          description: `Changed to ${location.name}, ${location.country}`,
-        });
-        
         // Hide location input after successful search
         setShowLocationInput(false);
         form.reset();
       } else {
-        throw new Error('Location not found');
+        // Silent fallback to default location
+        setCoordinates({ lat: 18.52, lon: 73.86 });
       }
     } catch (error) {
       console.error("Error searching location:", error);
-      toast({
-        title: "Location Error",
-        description: "Failed to find location. Please try again.",
-        variant: "destructive"
-      });
+      // Silently fallback to default location
+      setCoordinates({ lat: 18.52, lon: 73.86 });
     }
   };
 
@@ -150,34 +145,49 @@ const WeatherWidget: React.FC = () => {
           const currentForecast = forecastResponse.forecasts[0];
           
           // Get city name through reverse geocoding
-          const apiKey = "5a93f404f3bbd3ddd07d3f3ea27009e6";
-          const geoUrl = `https://api.openweathermap.org/geo/1.0/reverse?lat=${coordinates.lat}&lon=${coordinates.lon}&limit=1&appid=${apiKey}`;
-          const geoResponse = await fetch(geoUrl);
-          const geoData = await geoResponse.json();
-          const locationName = geoData && geoData.length > 0 
-            ? `${geoData[0].name}, ${geoData[0].country}`
-            : `${coordinates.lat.toFixed(2)}, ${coordinates.lon.toFixed(2)}`;
-          
-          setWeatherData({
-            temp: Math.round(currentForecast.temp),
-            humidity: currentForecast.humidity,
-            rainfall: currentForecast.rainfall,
-            description: currentForecast.description,
-            icon: currentForecast.icon,
-            location: locationName
-          });
+          try {
+            const apiKey = "3b8fc4c0ca8e470cbe9bd3fdc979824d"; // Updated API key
+            const geoUrl = `https://api.openweathermap.org/geo/1.0/reverse?lat=${coordinates.lat}&lon=${coordinates.lon}&limit=1&appid=${apiKey}`;
+            const geoResponse = await fetch(geoUrl);
+            const geoData = await geoResponse.json();
+            const locationName = geoData && geoData.length > 0 
+              ? `${geoData[0].name}, ${geoData[0].country}`
+              : `Pune, India`; // Default to Pune if reverse geocoding fails
+            
+            setWeatherData({
+              temp: Math.round(currentForecast.temp),
+              humidity: currentForecast.humidity,
+              rainfall: currentForecast.rainfall,
+              description: currentForecast.description,
+              icon: currentForecast.icon,
+              location: locationName
+            });
+          } catch (error) {
+            console.error("Error in reverse geocoding:", error);
+            // Fallback location name
+            setWeatherData({
+              temp: Math.round(currentForecast.temp),
+              humidity: currentForecast.humidity,
+              rainfall: currentForecast.rainfall,
+              description: currentForecast.description,
+              icon: currentForecast.icon,
+              location: "Pune, Maharashtra" // Default location name
+            });
+          }
         } else {
-          throw new Error(forecastResponse.message || 'Failed to fetch weather data');
+          // Fallback to mock data without showing error
+          setWeatherData({
+            temp: 32,
+            humidity: 65,
+            rainfall: 0,
+            description: 'Partly Cloudy',
+            icon: '03d',
+            location: 'Pune, Maharashtra'
+          });
         }
       } catch (error) {
         console.error("Error fetching weather data:", error);
-        toast({
-          title: "Weather Data Error",
-          description: "Failed to fetch weather data. Using default values.",
-          variant: "destructive"
-        });
-        
-        // Fallback to mock data if API call fails
+        // Fallback to mock data without showing error
         setWeatherData({
           temp: 32,
           humidity: 65,
@@ -192,7 +202,7 @@ const WeatherWidget: React.FC = () => {
     };
     
     fetchWeatherData();
-  }, [coordinates, toast]);
+  }, [coordinates]);
 
   const onSubmit = (data: LocationFormValues) => {
     searchLocation(data.locationQuery);
