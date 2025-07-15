@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ChevronLeft, CloudRain, Droplet, DropletIcon, Thermometer, CalendarDays, RefreshCw, AlertTriangle, Bell } from 'lucide-react';
+import { ChevronLeft, CloudRain, Droplet, DropletIcon, RefreshCw, AlertTriangle, Bell } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -11,8 +11,15 @@ import { useIrrigation } from '@/contexts/IrrigationContext';
 import weatherService from '@/services/WeatherService';
 import irrigationService, { SoilCondition } from '@/services/IrrigationService';
 import ForecastCard from '@/components/ForecastCard';
+import GeoLocation from '@/components/GeoLocation';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import networkUtils from '@/services/NetworkUtils';
+
+interface LocationData {
+  lat: number;
+  lon: number;
+  name?: string;
+}
 
 const IrrigationPlanner: React.FC = () => {
   const { t } = useLanguage();
@@ -30,7 +37,7 @@ const IrrigationPlanner: React.FC = () => {
   } = useIrrigation();
 
   const [isLoading, setIsLoading] = useState(false);
-  const [coordinates, setCoordinates] = useState<{lat: number, lon: number} | null>(null);
+  const [currentLocation, setCurrentLocation] = useState<LocationData | null>(null);
   const [recommendation, setRecommendation] = useState<{
     message: string;
     needsIrrigation: boolean;
@@ -38,92 +45,47 @@ const IrrigationPlanner: React.FC = () => {
   } | null>(null);
   const [isOnline, setIsOnline] = useState(networkUtils.isOnline());
 
-  // Get user location
+  // Initialize with default location (Delhi)
   useEffect(() => {
-    const getLocation = async () => {
-      if (navigator.geolocation) {
-        try {
-          const position = await new Promise<GeolocationPosition>((resolve, reject) => {
-            navigator.geolocation.getCurrentPosition(resolve, reject);
-          });
-          
-          setCoordinates({
-            lat: position.coords.latitude,
-            lon: position.coords.longitude
-          });
-        } catch (error) {
-          console.error("Error getting location:", error);
-          toast({
-            title: "Location Error",
-            description: "Using default location (Delhi, India).",
-            variant: "destructive"
-          });
-          // Fallback to Delhi coordinates
-          setCoordinates({ lat: 28.61, lon: 77.23 });
-        }
-      } else {
-        toast({
-          title: "Geolocation Error",
-          description: "Geolocation is not supported by this browser.",
-          variant: "destructive"
-        });
-        // Fallback to Delhi coordinates
-        setCoordinates({ lat: 28.61, lon: 77.23 });
-      }
-    };
-
-    getLocation();
+    const defaultLocation = { lat: 28.61, lon: 77.23, name: 'Delhi, India' };
+    setCurrentLocation(defaultLocation);
     
     // Set up network status listeners
     const cleanup = networkUtils.setupNetworkListeners(
-      // Online callback
       () => setIsOnline(true),
-      // Offline callback
       () => setIsOnline(false)
     );
 
     return cleanup;
-  }, [toast]);
+  }, []);
 
-  // Fetch weather data when coordinates are available
+  // Fetch weather data when location changes
   useEffect(() => {
     const fetchWeatherData = async () => {
-      if (!coordinates) return;
+      if (!currentLocation) return;
       
       setIsLoading(true);
       
       try {
         const forecastResponse = await weatherService.getForecast(
-          coordinates.lat, 
-          coordinates.lon
+          currentLocation.lat, 
+          currentLocation.lon
         );
         
         if (forecastResponse.success) {
           setWeatherForecasts(forecastResponse.forecasts);
-          
-          if (forecastResponse.message) {
-            toast({
-              title: "Weather Data",
-              description: forecastResponse.message
-            });
-          }
         } else {
           throw new Error(forecastResponse.message || "Failed to fetch weather data");
         }
       } catch (error) {
         console.error("Error fetching weather data:", error);
-        toast({
-          title: "Weather Data Error",
-          description: "Failed to fetch weather data. Using cached data if available.",
-          variant: "destructive"
-        });
       } finally {
         setIsLoading(false);
       }
     };
     
     fetchWeatherData();
-  }, [coordinates, setWeatherForecasts, toast]);
+  }, [currentLocation, setWeatherForecasts]);
 
   // Calculate irrigation recommendation when data changes
   useEffect(() => {
@@ -138,9 +100,13 @@ const IrrigationPlanner: React.FC = () => {
     }
   }, [selectedCrop, soilCondition, weatherForecasts]);
 
+  const handleLocationChange = (location: LocationData) => {
+    setCurrentLocation(location);
+  };
+
   // Handler for refreshing data
   const handleRefresh = () => {
-    if (coordinates) {
+    if (currentLocation) {
       const fetchFreshData = async () => {
         setIsLoading(true);
         try {
@@ -155,8 +121,8 @@ const IrrigationPlanner: React.FC = () => {
           }
           
           const forecastResponse = await weatherService.getForecast(
-            coordinates.lat, 
-            coordinates.lon
+            currentLocation.lat, 
+            currentLocation.lon
           );
           
           if (forecastResponse.success) {
@@ -209,6 +175,13 @@ const IrrigationPlanner: React.FC = () => {
           </AlertDescription>
         </Alert>
       )}
+
+      <div className="mb-4">
+        <GeoLocation 
+          onLocationChange={handleLocationChange}
+          currentLocation={currentLocation}
+        />
+      </div>
       
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {/* Crop and Soil Input Section */}
@@ -298,9 +271,8 @@ const IrrigationPlanner: React.FC = () => {
           <CardHeader>
             <CardTitle>5-Day Weather Forecast</CardTitle>
             <CardDescription>
-              {coordinates ? 
-                `Based on location: ${coordinates.lat.toFixed(2)}, ${coordinates.lon.toFixed(2)}` : 
-                'Fetching location...'}
+              {currentLocation?.name || 
+               (currentLocation ? `${currentLocation.lat.toFixed(2)}, ${currentLocation.lon.toFixed(2)}` : 'No location set')}
             </CardDescription>
           </CardHeader>
           <CardContent>

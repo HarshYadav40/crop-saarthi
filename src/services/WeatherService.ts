@@ -1,4 +1,3 @@
-
 import { toast } from "@/hooks/use-toast";
 
 export interface WeatherForecast {
@@ -17,7 +16,7 @@ export interface ForecastResponse {
 }
 
 class WeatherService {
-  private readonly API_KEY = "3b8fc4c0ca8e470cbe9bd3fdc979824d"; // Updated API key
+  private readonly API_KEY = "bd5e378503939ddaee76f12ad7a97608"; // Valid API key
   private readonly API_URL = "https://api.openweathermap.org/data/2.5/forecast";
   private cachedForecasts: Record<string, { data: ForecastResponse; timestamp: number }> = {};
   private readonly CACHE_VALIDITY = 3 * 60 * 60 * 1000; // 3 hours in milliseconds
