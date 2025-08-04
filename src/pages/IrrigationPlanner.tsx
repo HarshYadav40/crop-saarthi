@@ -45,10 +45,28 @@ const IrrigationPlanner: React.FC = () => {
   } | null>(null);
   const [isOnline, setIsOnline] = useState(networkUtils.isOnline());
 
-  // Initialize with default location (Delhi)
+  // Initialize with default location and auto-detect user location
   useEffect(() => {
     const defaultLocation = { lat: 28.61, lon: 77.23, name: 'Delhi, India' };
-    setCurrentLocation(defaultLocation);
+    
+    // Try to get user's current location automatically
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          setCurrentLocation({
+            lat: position.coords.latitude,
+            lon: position.coords.longitude,
+            name: 'Current Location'
+          });
+        },
+        (error) => {
+          console.log("Geolocation failed, using default location:", error.message);
+          setCurrentLocation(defaultLocation);
+        }
+      );
+    } else {
+      setCurrentLocation(defaultLocation);
+    }
     
     // Set up network status listeners
     const cleanup = networkUtils.setupNetworkListeners(

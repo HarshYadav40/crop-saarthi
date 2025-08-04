@@ -65,6 +65,12 @@ class IrrigationService {
       minRainfallPerWeek: 22,
       idealSoilMoisture: 65,
       alertThresholdDays: 3
+    },
+    {
+      crop: "Coffee",
+      minRainfallPerWeek: 25,
+      idealSoilMoisture: 75,
+      alertThresholdDays: 3
     }
   ];
 
